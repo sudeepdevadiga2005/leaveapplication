@@ -1,66 +1,190 @@
 from flask import Blueprint, request, jsonify, session
-from models import Leave, Notification, User
+from models import Leave, Student, Lecturer, LecturerAssignment, Class
 from extensions import db
 from datetime import datetime
 
 leaves_bp = Blueprint('leaves', __name__)
 
-@leaves_bp.route('/', methods=['GET'])
-def get_leaves():
-    uid  = session.get('user_id')
-    if not uid:
-        return jsonify({'error': 'Not authenticated'}), 401
-    user = User.query.get(uid)
-    if user.role == 'student':
-        leaves = Leave.query.filter_by(student_id=uid).order_by(Leave.id).all()
-    else:
-        leaves = Leave.query.order_by(Leave.id).all()
-    return jsonify([l.to_dict() for l in leaves]), 200
+def current_user():
+    return session.get('user_id'), session.get('user_role')
 
-@leaves_bp.route('/', methods=['POST'])
+# ── Apply Leave ───────────────────────────────────────────────
+@leaves_bp.route('/apply', methods=['POST'])
 def apply_leave():
-    uid = session.get('user_id')
+    uid, role = current_user()
     if not uid:
         return jsonify({'error': 'Not authenticated'}), 401
-    d = request.get_json()
-    leave = Leave(
-        student_id=uid,
-        type=d['type'], from_date=d['from'], to_date=d['to'],
-        days=d['days'], reason=d['reason'],
-        applied_on=datetime.now().strftime('%Y-%m-%d')
-    )
-    db.session.add(leave)
-    db.session.flush()
 
-    notif = Notification(
-        user_id=uid, type='pending',
-        msg=f"Leave application for {d['from']}{' → ' + d['to'] if d['from'] != d['to'] else ''} submitted successfully.",
-        time_label='Just now'
-    )
-    db.session.add(notif)
+    d = request.get_json()
+
+    if role == 'student':
+        student = Student.query.get(uid)
+        # Determine initial status: if lecturers assigned to class → Pending with Lecturer
+        # else → Pending with Management
+        assignments = LecturerAssignment.query.join(Class).filter(
+            Class.class_name == student.class_name
+        ).all()
+        initial_status = 'Pending with Lecturer' if assignments else 'Pending with Management'
+
+        leave = Leave(
+            applicant_id=uid, applicant_role='student',
+            applicant_name=student.student_name or student.roll_no,
+            email=student.email, department=student.department,
+            class_name=student.class_name,
+            leave_type=d['leave_type'], reason=d['reason'],
+            from_date=d['from_date'], to_date=d['to_date'],
+            days=d.get('days', 1), status=initial_status
+        )
+
+    elif role == 'lecturer':
+        lec = Lecturer.query.get(uid)
+        leave = Leave(
+            applicant_id=uid, applicant_role='lecturer',
+            applicant_name=lec.lecturer_name, email=lec.email,
+            department=lec.department, class_name='',
+            leave_type=d['leave_type'], reason=d['reason'],
+            from_date=d['from_date'], to_date=d['to_date'],
+            days=d.get('days', 1), status='Pending with Management'
+        )
+    else:
+        return jsonify({'error': 'Only students and lecturers can apply'}), 403
+
+    db.session.add(leave)
     db.session.commit()
     return jsonify(leave.to_dict()), 201
 
-@leaves_bp.route('/<int:lid>', methods=['PATCH'])
-def update_leave(lid):
-    uid = session.get('user_id')
+# ── My Leaves ─────────────────────────────────────────────────
+@leaves_bp.route('/my', methods=['GET'])
+def my_leaves():
+    uid, role = current_user()
     if not uid:
         return jsonify({'error': 'Not authenticated'}), 401
-    user = User.query.get(uid)
-    if user.role != 'faculty':
+    leaves = Leave.query.filter_by(applicant_id=uid, applicant_role=role).order_by(Leave.id.desc()).all()
+    return jsonify([l.to_dict() for l in leaves]), 200
+
+# ── Student requests visible to a Lecturer ────────────────────
+@leaves_bp.route('/student-requests', methods=['GET'])
+def student_requests():
+    uid, role = current_user()
+    if role != 'lecturer':
         return jsonify({'error': 'Forbidden'}), 403
 
-    leave = Leave.query.get_or_404(lid)
-    d = request.get_json()
-    leave.status  = d.get('status', leave.status)
-    leave.remarks = d.get('remarks', leave.remarks)
+    # Get all classes this lecturer is assigned to
+    assignments = LecturerAssignment.query.filter_by(lecturer_id=uid).all()
+    class_ids   = {a.class_id for a in assignments}
+    class_names = set()
+    for cid in class_ids:
+        c = Class.query.get(cid)
+        if c:
+            class_names.add(c.class_name)
 
-    notif = Notification(
-        user_id=leave.student_id,
-        type='approved' if leave.status == 'Approved' else 'rejected',
-        msg=f"Your {leave.type} leave for {leave.from_date}{' → ' + leave.to_date if leave.from_date != leave.to_date else ''} has been {leave.status.lower()}.",
-        time_label='Just now'
-    )
-    db.session.add(notif)
+    leaves = Leave.query.filter(
+        Leave.applicant_role == 'student',
+        Leave.class_name.in_(class_names),
+        Leave.status.in_(['Pending with Lecturer', 'Approved by Lecturer',
+                          'Rejected by Lecturer', 'Forwarded to Management'])
+    ).order_by(Leave.id.desc()).all()
+    return jsonify([l.to_dict() for l in leaves]), 200
+
+# ── Lecturer leave requests visible to Management ─────────────
+@leaves_bp.route('/lecturer-requests', methods=['GET'])
+def lecturer_requests():
+    _, role = current_user()
+    if role != 'management':
+        return jsonify({'error': 'Forbidden'}), 403
+    leaves = Leave.query.filter_by(applicant_role='lecturer').order_by(Leave.id.desc()).all()
+    return jsonify([l.to_dict() for l in leaves]), 200
+
+# ── Forwarded student leaves visible to Management ────────────
+@leaves_bp.route('/forwarded', methods=['GET'])
+def forwarded_leaves():
+    _, role = current_user()
+    if role != 'management':
+        return jsonify({'error': 'Forbidden'}), 403
+    leaves = Leave.query.filter(
+        Leave.applicant_role == 'student',
+        Leave.status.in_(['Forwarded to Management', 'Pending with Management',
+                          'Approved by Management', 'Rejected by Management'])
+    ).order_by(Leave.id.desc()).all()
+    return jsonify([l.to_dict() for l in leaves]), 200
+
+# ── All leaves (management) ───────────────────────────────────
+@leaves_bp.route('/all', methods=['GET'])
+def all_leaves():
+    _, role = current_user()
+    if role != 'management':
+        return jsonify({'error': 'Forbidden'}), 403
+    leaves = Leave.query.order_by(Leave.id.desc()).all()
+    return jsonify([l.to_dict() for l in leaves]), 200
+
+# ── Approve ───────────────────────────────────────────────────
+@leaves_bp.route('/approve/<int:lid>', methods=['POST'])
+def approve(lid):
+    uid, role = current_user()
+    leave = Leave.query.get_or_404(lid)
+    d = request.get_json() or {}
+    remarks = d.get('remarks', 'Approved.')
+
+    if role == 'lecturer':
+        if leave.status != 'Pending with Lecturer':
+            return jsonify({'error': 'Cannot approve at this stage'}), 400
+        leave.status     = 'Approved by Lecturer'
+        leave.handled_by = uid
+        leave.remarks    = remarks
+    elif role == 'management':
+        if leave.status not in ('Pending with Management', 'Forwarded to Management'):
+            return jsonify({'error': 'Cannot approve at this stage'}), 400
+        leave.status     = 'Approved by Management'
+        leave.handled_by = uid
+        leave.remarks    = remarks
+    else:
+        return jsonify({'error': 'Forbidden'}), 403
+
+    leave.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify(leave.to_dict()), 200
+
+# ── Reject ────────────────────────────────────────────────────
+@leaves_bp.route('/reject/<int:lid>', methods=['POST'])
+def reject(lid):
+    uid, role = current_user()
+    leave = Leave.query.get_or_404(lid)
+    d = request.get_json() or {}
+    remarks = d.get('remarks', 'Rejected.')
+
+    if role == 'lecturer':
+        if leave.status != 'Pending with Lecturer':
+            return jsonify({'error': 'Cannot reject at this stage'}), 400
+        leave.status     = 'Rejected by Lecturer'
+        leave.handled_by = uid
+        leave.remarks    = remarks
+    elif role == 'management':
+        if leave.status not in ('Pending with Management', 'Forwarded to Management'):
+            return jsonify({'error': 'Cannot reject at this stage'}), 400
+        leave.status     = 'Rejected by Management'
+        leave.handled_by = uid
+        leave.remarks    = remarks
+    else:
+        return jsonify({'error': 'Forbidden'}), 403
+
+    leave.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify(leave.to_dict()), 200
+
+# ── Forward to Management ─────────────────────────────────────
+@leaves_bp.route('/forward/<int:lid>', methods=['POST'])
+def forward(lid):
+    uid, role = current_user()
+    if role != 'lecturer':
+        return jsonify({'error': 'Only lecturers can forward'}), 403
+    leave = Leave.query.get_or_404(lid)
+    if leave.status != 'Pending with Lecturer':
+        return jsonify({'error': 'Can only forward pending leaves'}), 400
+    d = request.get_json() or {}
+    leave.status       = 'Forwarded to Management'
+    leave.forwarded_to = 'management'
+    leave.handled_by   = uid
+    leave.remarks      = d.get('remarks', 'Forwarded to management for review.')
+    leave.updated_at   = datetime.utcnow()
     db.session.commit()
     return jsonify(leave.to_dict()), 200

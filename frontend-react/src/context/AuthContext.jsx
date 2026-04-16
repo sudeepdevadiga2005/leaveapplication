@@ -14,19 +14,13 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const login = async (email, password, role) => {
-    const d = await api.login(email, password, role)
-    setUser(d.user)
-    return d.user
-  }
-
   const logout = async () => {
-    await api.logout()
+    await api.logout().catch(() => {})
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, logout }}>
       {children}
     </AuthContext.Provider>
   )

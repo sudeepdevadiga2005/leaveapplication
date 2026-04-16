@@ -1,4 +1,3 @@
-// Central API helper — all calls go through here
 const BASE = '/api'
 
 async function req(method, path, body) {
@@ -15,16 +14,37 @@ async function req(method, path, body) {
 
 export const api = {
   // Auth
-  login:  (email, password, role) => req('POST', '/auth/login',  { email, password, role }),
-  logout: ()                       => req('POST', '/auth/logout'),
-  me:     ()                       => req('GET',  '/auth/me'),
+  studentRegister:  (d)  => req('POST', '/student/register', d),
+  studentLogin:     (d)  => req('POST', '/student/login', d),
+  lecturerRegister: (d)  => req('POST', '/lecturer/register', d),
+  lecturerLogin:    (d)  => req('POST', '/lecturer/login', d),
+  managementLogin:  (d)  => req('POST', '/management/login', d),
+  me:               ()   => req('GET',  '/me'),
+  logout:           ()   => req('POST', '/logout'),
 
   // Leaves
-  getLeaves:   ()       => req('GET',   '/leaves/'),
-  applyLeave:  (data)   => req('POST',  '/leaves/', data),
-  updateLeave: (id, d)  => req('PATCH', `/leaves/${id}`, d),
+  applyLeave:        (d)   => req('POST', '/leaves/apply', d),
+  myLeaves:          ()    => req('GET',  '/leaves/my'),
+  studentRequests:   ()    => req('GET',  '/leaves/student-requests'),
+  lecturerRequests:  ()    => req('GET',  '/leaves/lecturer-requests'),
+  forwardedLeaves:   ()    => req('GET',  '/leaves/forwarded'),
+  allLeaves:         ()    => req('GET',  '/leaves/all'),
+  approveLeave:      (id, d) => req('POST', `/leaves/approve/${id}`, d),
+  rejectLeave:       (id, d) => req('POST', `/leaves/reject/${id}`, d),
+  forwardLeave:      (id, d) => req('POST', `/leaves/forward/${id}`, d),
 
-  // Notifications
-  getNotifs:  ()  => req('GET',   '/notifications/'),
-  markRead:   ()  => req('PATCH', '/notifications/read-all'),
+  // Admin
+  createClass:       (d)   => req('POST',   '/admin/create-class', d),
+  getClasses:        ()    => req('GET',    '/admin/classes'),
+  deleteClass:       (id)  => req('DELETE', `/admin/delete-class/${id}`),
+  createSubject:     (d)   => req('POST',   '/admin/create-subject', d),
+  getSubjects:       ()    => req('GET',    '/admin/subjects'),
+  deleteSubject:     (id)  => req('DELETE', `/admin/delete-subject/${id}`),
+  assignLecturer:    (d)   => req('POST',   '/admin/assign-lecturer', d),
+  getAssignments:    ()    => req('GET',    '/admin/assignments'),
+  updateAssignment:  (id, d) => req('PUT',  `/admin/update-assignment/${id}`, d),
+  deleteAssignment:  (id)  => req('DELETE', `/admin/delete-assignment/${id}`),
+  getStudents:       ()    => req('GET',    '/admin/students'),
+  getLecturers:      ()    => req('GET',    '/admin/lecturers'),
+  getDashboard:      ()    => req('GET',    '/admin/dashboard'),
 }
