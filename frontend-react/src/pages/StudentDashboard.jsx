@@ -102,18 +102,30 @@ export default function StudentDashboard() {
               </div>
             </div>
             <div className="stats-grid">
-              <div className="stat-card c-teal">
-                <div className="stat-icon">CAL</div>
-                <div className="stat-value">{remaining}</div>
-                <div className="stat-label">Remaining Leaves</div>
-                <div className="stat-sub">of {QUOTA} total quota</div>
-                <div className="progress-wrap" style={{ marginTop:'.75rem' }}>
-                  <div className={`progress-fill ${quotaPct >= 80 ? 'red' : quotaPct >= 55 ? 'yellow' : 'teal'}`} style={{ width: quotaPct + '%' }} />
-                </div>
+              <div className="stat-card c-yellow">
+                <div className="stat-icon">PND</div>
+                <div className="stat-value">{leaves.filter(l=>l.status.includes('Pending')).length}</div>
+                <div className="stat-label">Pending</div>
+                <div className="stat-sub">awaiting approval</div>
               </div>
-              <div className="stat-card c-yellow"><div className="stat-icon">PND</div><div className="stat-value">{leaves.filter(l=>l.status==='Pending').length}</div><div className="stat-label">Pending</div><div className="stat-sub">awaiting approval</div></div>
-              <div className="stat-card c-teal"><div className="stat-icon">APR</div><div className="stat-value">{approved.length}</div><div className="stat-label">Approved</div><div className="stat-sub">this semester</div></div>
-              <div className="stat-card c-red"><div className="stat-icon">REJ</div><div className="stat-value">{leaves.filter(l=>l.status==='Rejected').length}</div><div className="stat-label">Rejected</div><div className="stat-sub">this semester</div></div>
+              <div className="stat-card c-teal">
+                <div className="stat-icon">APR</div>
+                <div className="stat-value">{approved.length}</div>
+                <div className="stat-label">Approved</div>
+                <div className="stat-sub">this semester</div>
+              </div>
+              <div className="stat-card c-red">
+                <div className="stat-icon">REJ</div>
+                <div className="stat-value">{leaves.filter(l=>l.status.includes('Rejected')).length}</div>
+                <div className="stat-label">Rejected</div>
+                <div className="stat-sub">this semester</div>
+              </div>
+              <div className="stat-card c-blue">
+                <div className="stat-icon">TOT</div>
+                <div className="stat-value">{leaves.length}</div>
+                <div className="stat-label">Total Applied</div>
+                <div className="stat-sub">all time</div>
+              </div>
             </div>
             <div className="grid-2-1">
               <div className="card">
