@@ -308,29 +308,23 @@ export default function StudentDashboard() {
             <div className="topbar"><div className="topbar-left"><h1>My Profile</h1><p>Your academic information</p></div></div>
             <div className="card">
               <div style={{ display:'flex', alignItems:'center', gap:'1.25rem', marginBottom:'1.5rem', paddingBottom:'1.5rem', borderBottom:'1px solid var(--border)' }}>
-                <div className="avatar-lg avatar-student">{user?.name?.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
+                <div className="avatar-lg avatar-student">
+                  {(user?.student_name || user?.roll_no || 'S').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}
+                </div>
                 <div>
-                  <p style={{ fontSize:'1.2rem', fontWeight:600, color:'var(--text-1)' }}>{user?.name}</p>
-                  <p style={{ color:'var(--text-3)', fontSize:'.875rem', marginTop:'.2rem' }}>{user?.dept} · {user?.year}</p>
+                  <p style={{ fontSize:'1.2rem', fontWeight:600, color:'var(--text-1)' }}>{user?.student_name || user?.roll_no}</p>
+                  <p style={{ color:'var(--text-3)', fontSize:'.875rem', marginTop:'.2rem' }}>{user?.department} · Semester {user?.semester}</p>
                 </div>
               </div>
               <div className="profile-grid">
-                <div className="profile-field"><label>Roll Number</label><p>{user?.roll_id}</p></div>
-                <div className="profile-field"><label>Department</label><p>{user?.dept}</p></div>
-                <div className="profile-field"><label>Year</label><p>{user?.year}</p></div>
-                <div className="profile-field"><label>Faculty Mentor</label><p>{user?.faculty}</p></div>
+                <div className="profile-field"><label>Roll Number</label><p>{user?.roll_no}</p></div>
+                <div className="profile-field"><label>Department</label><p>{user?.department}</p></div>
+                <div className="profile-field"><label>Class</label><p>{user?.class_name}</p></div>
+                <div className="profile-field"><label>Semester</label><p>{user?.semester || '—'}</p></div>
                 <div className="profile-field"><label>Email</label><p>{user?.email}</p></div>
                 <div className="profile-field"><label>Leave Quota</label><p>{QUOTA} days / semester</p></div>
               </div>
-              <div style={{ marginTop:'1.5rem', paddingTop:'1.5rem', borderTop:'1px solid var(--border)' }}>
-                <div className="card-title" style={{ marginBottom:'1rem' }}><div className="card-icon">—</div>Attendance Summary</div>
-                <div className="stats-grid">
-                  <div className="stat-card c-teal"><div className="stat-icon">ATT</div><div className="stat-value">86%</div><div className="stat-label">Attendance</div><div className="stat-sub">this semester</div></div>
-                  <div className="stat-card"><div className="stat-icon">CLS</div><div className="stat-value">142</div><div className="stat-label">Total Classes</div><div className="stat-sub">conducted</div></div>
-                  <div className="stat-card c-yellow"><div className="stat-icon">ABS</div><div className="stat-value">5</div><div className="stat-label">Days Absent</div><div className="stat-sub">this semester</div></div>
-                  <div className="stat-card c-blue"><div className="stat-icon">STK</div><div className="stat-value">12</div><div className="stat-label">Day Streak</div><div className="stat-sub">present</div></div>
-                </div>
-              </div>
+
             </div>
           </div>
         )}
