@@ -64,38 +64,39 @@ const S = {
   }),
   // ── Alert boxes ──
   alertError: {
-    display: 'flex', alignItems: 'flex-start', gap: 10,
-    color: '#fca5a5',
-    fontSize: '.875rem', fontWeight: 500,
-    margin: '1rem 0',
-    padding: '0.85rem 1rem',
-    background: 'rgba(248,113,113,.12)',
-    border: '1px solid rgba(248,113,113,.4)',
-    borderRadius: 10,
+    display: 'flex', alignItems: 'center', gap: 12,
+    color: '#dc2626',
+    fontSize: '.9rem', fontWeight: 600,
+    margin: '0 0 1rem 0',
+    padding: '1rem 1.25rem',
+    background: '#fee2e2',
+    border: '2px solid #ef4444',
+    borderRadius: 12,
     lineHeight: 1.5,
   },
   alertSuccess: {
-    display: 'flex', alignItems: 'flex-start', gap: 10,
-    color: '#6ee7b7',
-    fontSize: '.875rem', fontWeight: 500,
-    margin: '1rem 0',
-    padding: '0.85rem 1rem',
-    background: 'rgba(52,211,153,.12)',
-    border: '1px solid rgba(52,211,153,.4)',
-    borderRadius: 10,
+    display: 'flex', alignItems: 'center', gap: 12,
+    color: '#059669',
+    fontSize: '.9rem', fontWeight: 600,
+    margin: '0 0 1rem 0',
+    padding: '1rem 1.25rem',
+    background: '#d1fae5',
+    border: '2px solid #10b981',
+    borderRadius: 12,
     lineHeight: 1.5,
   },
   alertIcon: {
-    flexShrink: 0, width: 20, height: 20,
+    flexShrink: 0, width: 24, height: 24,
     borderRadius: '50%', display: 'flex',
     alignItems: 'center', justifyContent: 'center',
-    fontSize: '.75rem', fontWeight: 700, marginTop: 1,
+    fontSize: '.9rem', fontWeight: 700,
+    background: '#fff',
   },
   submitBtn: (color) => ({
     width: '100%', padding: '.9rem',
     marginTop: '.75rem',
     background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-    color: color === 'var(--purple)' ? '#fff' : '#042f2e',
+    color: color === 'var(--purple)' ? '#fff' : '#fff',
     border: 'none', borderRadius: 13,
     fontFamily: "'Inter',sans-serif",
     fontSize: '.95rem', fontWeight: 700,
@@ -103,25 +104,6 @@ const S = {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     letterSpacing: '.3px',
   }),
-  demoCred: {
-    padding: '.85rem 1rem',
-    background: 'var(--bg-2)',
-    border: '1px solid var(--border)',
-    borderRadius: 10,
-    fontSize: '.8rem', color: 'var(--text-2)', lineHeight: 2,
-    marginTop: '1.25rem',
-  },
-  demoRow: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  },
-  demoCode: {
-    background: 'var(--teal-dim)',
-    border: '1px solid var(--teal)',
-    borderRadius: 6, padding: '2px 10px',
-    color: 'var(--teal)', cursor: 'pointer',
-    fontSize: '.78rem', fontFamily: 'monospace',
-    transition: 'background .15s',
-  },
 }
 
 export default function Login() {
@@ -168,13 +150,6 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const fillDemo = (r) => {
-    setRole(r); setMode('login'); setForm({}); setError(''); setSuccess('')
-    if (r === 'student')    setForm({ identifier: 'arjun@demo.com', password: '1234' })
-    if (r === 'lecturer')   setForm({ email: 'priya@demo.com',      password: '1234' })
-    if (r === 'management') setForm({ email: 'admin@demo.com',      password: 'admin123' })
   }
 
   const switchRole = (r) => {
@@ -342,22 +317,6 @@ export default function Login() {
               ? <><span className="spinner" /> Processing…</>
               : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
-
-          {/* Demo credentials */}
-          <div style={S.demoCred}>
-            <div style={{ fontSize:'.72rem', fontWeight:700, color:'var(--text-2)', textTransform:'uppercase',
-              letterSpacing:'.8px', marginBottom:'.5rem' }}>Demo Credentials</div>
-            {[
-              { r:'student',    label:'Student',    cred:'arjun@demo.com / 1234' },
-              { r:'lecturer',   label:'Lecturer',   cred:'priya@demo.com / 1234' },
-              { r:'management', label:'Management', cred:'admin@demo.com / admin123' },
-            ].map(d => (
-              <div key={d.r} style={S.demoRow}>
-                <span style={{ color:'var(--text-2)', fontWeight:500 }}>{d.label}</span>
-                <code onClick={() => fillDemo(d.r)} style={S.demoCode}>{d.cred}</code>
-              </div>
-            ))}
-          </div>
 
         </div>
       </div>
