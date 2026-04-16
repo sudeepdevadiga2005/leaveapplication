@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../api'
 import Sidebar from '../components/Sidebar'
@@ -48,7 +48,7 @@ export default function StudentDashboard() {
       await api.applyLeave({ type: leaveType, from: fromDate, to: toDate, days, reason: reason.trim() })
       setLeaveType(''); setReason(''); setFromDate(today); setToDate(today)
       await load()
-      showToast('Submitted ✓', 'Your leave application has been sent to your faculty.', 'success')
+      showToast('Submitted ', 'Your leave application has been sent to your faculty.', 'success')
       setPage('history')
     } catch (e) { showToast('Error', e.message, 'error') }
   }
@@ -94,7 +94,7 @@ export default function StudentDashboard() {
           <div className="fade-in">
             <div className="topbar">
               <div className="topbar-left">
-                <h1>{`${new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}, ${user?.name?.split(' ')[0]} 👋`}</h1>
+                <h1>{`${new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}, ${(user?.student_name || user?.roll_no || 'Student').split(' ')[0]}`}
                 <p>Here's your leave status at a glance</p>
               </div>
               <div className="topbar-right">
@@ -103,7 +103,7 @@ export default function StudentDashboard() {
             </div>
             <div className="stats-grid">
               <div className="stat-card c-teal">
-                <div className="stat-icon">🗓️</div>
+                <div className="stat-icon">CAL</div>
                 <div className="stat-value">{remaining}</div>
                 <div className="stat-label">Remaining Leaves</div>
                 <div className="stat-sub">of {QUOTA} total quota</div>
@@ -111,14 +111,14 @@ export default function StudentDashboard() {
                   <div className={`progress-fill ${quotaPct >= 80 ? 'red' : quotaPct >= 55 ? 'yellow' : 'teal'}`} style={{ width: quotaPct + '%' }} />
                 </div>
               </div>
-              <div className="stat-card c-yellow"><div className="stat-icon">⏳</div><div className="stat-value">{leaves.filter(l=>l.status==='Pending').length}</div><div className="stat-label">Pending</div><div className="stat-sub">awaiting approval</div></div>
-              <div className="stat-card c-teal"><div className="stat-icon">✅</div><div className="stat-value">{approved.length}</div><div className="stat-label">Approved</div><div className="stat-sub">this semester</div></div>
-              <div className="stat-card c-red"><div className="stat-icon">❌</div><div className="stat-value">{leaves.filter(l=>l.status==='Rejected').length}</div><div className="stat-label">Rejected</div><div className="stat-sub">this semester</div></div>
+              <div className="stat-card c-yellow"><div className="stat-icon">PND</div><div className="stat-value">{leaves.filter(l=>l.status==='Pending').length}</div><div className="stat-label">Pending</div><div className="stat-sub">awaiting approval</div></div>
+              <div className="stat-card c-teal"><div className="stat-icon">APR</div><div className="stat-value">{approved.length}</div><div className="stat-label">Approved</div><div className="stat-sub">this semester</div></div>
+              <div className="stat-card c-red"><div className="stat-icon">REJ</div><div className="stat-value">{leaves.filter(l=>l.status==='Rejected').length}</div><div className="stat-label">Rejected</div><div className="stat-sub">this semester</div></div>
             </div>
             <div className="grid-2-1">
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title"><div className="card-icon">📋</div>Recent Applications</div>
+                  <div className="card-title"><div className="card-icon">—</div>Recent Applications</div>
                   <button className="btn btn-ghost btn-sm" onClick={() => setPage('history')}>View All →</button>
                 </div>
                 <div className="table-wrap">
@@ -132,13 +132,13 @@ export default function StudentDashboard() {
                         <td><span className={`badge badge-${l.status.toLowerCase()}`}>{l.status}</span></td>
                       </tr>
                     ))}
-                    {!leaves.length && <tr><td colSpan={4}><div className="empty-state"><div className="empty-icon">📭</div><p>No applications yet</p></div></td></tr>}
+                    {!leaves.length && <tr><td colSpan={4}><div className="empty-state"><p>No applications yet</p></div></td></tr>}
                   </tbody></table>
                 </div>
               </div>
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title"><div className="card-icon">🔔</div>Notifications</div>
+                  <div className="card-title"><div className="card-icon">—</div>Notifications</div>
                   <button className="btn btn-ghost btn-sm" onClick={() => { setPage('notifications'); markNotifsRead() }}>All →</button>
                 </div>
                 {notifs.slice(0, 4).map(n => (
@@ -147,7 +147,7 @@ export default function StudentDashboard() {
                     <div className="notif-body"><p>{n.msg}</p><span>{n.time}</span></div>
                   </div>
                 ))}
-                {!notifs.length && <div className="empty-state"><div className="empty-icon">🔔</div><p>No notifications</p></div>}
+                {!notifs.length && <div className="empty-state"><p>No notifications</p></div>}
               </div>
             </div>
           </div>
@@ -158,18 +158,18 @@ export default function StudentDashboard() {
           <div className="fade-in">
             <div className="topbar"><div className="topbar-left"><h1>Apply for Leave</h1><p>Fill in the details — your faculty will be notified automatically</p></div></div>
             <div className="card">
-              <div className="card-title" style={{ marginBottom:'1.5rem' }}><div className="card-icon">✍️</div>Leave Application Form</div>
+              <div className="card-title" style={{ marginBottom:'1.5rem' }}><div className="card-icon">—</div>Leave Application Form</div>
               <div className="form-grid">
                 <div className="form-group">
                   <label className="form-label">Leave Type</label>
                   <select className="form-control" value={leaveType} onChange={e => setLeaveType(e.target.value)}>
                     <option value="">Select type…</option>
-                    <option value="medical">🏥 Medical / Health</option>
-                    <option value="personal">👤 Personal</option>
-                    <option value="family">👨‍👩‍👧 Family Emergency</option>
-                    <option value="academic">🎓 Academic Event</option>
-                    <option value="sports">🏆 Sports / Cultural</option>
-                    <option value="other">📌 Other</option>
+                    <option value="medical">Medical / Health</option>
+                    <option value="personal">Personal</option>
+                    <option value="family">Family Emergency</option>
+                    <option value="academic">Academic Event</option>
+                    <option value="sports">Sports / Cultural</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -236,7 +236,7 @@ export default function StudentDashboard() {
                         <td className="td-muted td-clip">{l.remarks}</td>
                       </tr>
                     ))}
-                    {!filteredLeaves.length && <tr><td colSpan={8}><div className="empty-state"><div className="empty-icon">📭</div><p>No records match your filters</p></div></td></tr>}
+                    {!filteredLeaves.length && <tr><td colSpan={8}><div className="empty-state"><p>No records match your filters</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -270,7 +270,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
               <div className="card">
-                <div className="card-title" style={{ marginBottom:'1rem' }}><div className="card-icon">📌</div>Upcoming Leaves</div>
+                <div className="card-title" style={{ marginBottom:'1rem' }}><div className="card-icon">—</div>Upcoming Leaves</div>
                 {leaves.filter(l => new Date(l.from+'T00:00:00') >= new Date() && l.status !== 'Rejected').map(l => (
                   <div key={l.id} className="upcoming-item">
                     <div className="upcoming-row">
@@ -281,7 +281,7 @@ export default function StudentDashboard() {
                   </div>
                 ))}
                 {!leaves.filter(l => new Date(l.from+'T00:00:00') >= new Date() && l.status !== 'Rejected').length &&
-                  <div className="empty-state"><div className="empty-icon">📅</div><p>No upcoming leaves</p></div>}
+                  <div className="empty-state"><p>No upcoming leaves</p></div>}
               </div>
             </div>
           </div>
@@ -297,7 +297,7 @@ export default function StudentDashboard() {
                   <div className={`notif-dot ${notifDot(n.type)}`} />
                   <div className="notif-body"><p>{n.msg}</p><span>{n.time}</span></div>
                 </div>
-              )) : <div className="empty-state"><div className="empty-icon">🔔</div><p>No notifications yet</p></div>}
+              )) : <div className="empty-state"><p>No notifications yet</p></div>}
             </div>
           </div>
         )}
@@ -323,12 +323,12 @@ export default function StudentDashboard() {
                 <div className="profile-field"><label>Leave Quota</label><p>{QUOTA} days / semester</p></div>
               </div>
               <div style={{ marginTop:'1.5rem', paddingTop:'1.5rem', borderTop:'1px solid var(--border)' }}>
-                <div className="card-title" style={{ marginBottom:'1rem' }}><div className="card-icon">📊</div>Attendance Summary</div>
+                <div className="card-title" style={{ marginBottom:'1rem' }}><div className="card-icon">—</div>Attendance Summary</div>
                 <div className="stats-grid">
-                  <div className="stat-card c-teal"><div className="stat-icon">📈</div><div className="stat-value">86%</div><div className="stat-label">Attendance</div><div className="stat-sub">this semester</div></div>
-                  <div className="stat-card"><div className="stat-icon">🏫</div><div className="stat-value">142</div><div className="stat-label">Total Classes</div><div className="stat-sub">conducted</div></div>
-                  <div className="stat-card c-yellow"><div className="stat-icon">📅</div><div className="stat-value">5</div><div className="stat-label">Days Absent</div><div className="stat-sub">this semester</div></div>
-                  <div className="stat-card c-blue"><div className="stat-icon">🔥</div><div className="stat-value">12</div><div className="stat-label">Day Streak</div><div className="stat-sub">present</div></div>
+                  <div className="stat-card c-teal"><div className="stat-icon">ATT</div><div className="stat-value">86%</div><div className="stat-label">Attendance</div><div className="stat-sub">this semester</div></div>
+                  <div className="stat-card"><div className="stat-icon">CLS</div><div className="stat-value">142</div><div className="stat-label">Total Classes</div><div className="stat-sub">conducted</div></div>
+                  <div className="stat-card c-yellow"><div className="stat-icon">ABS</div><div className="stat-value">5</div><div className="stat-label">Days Absent</div><div className="stat-sub">this semester</div></div>
+                  <div className="stat-card c-blue"><div className="stat-icon">STK</div><div className="stat-value">12</div><div className="stat-label">Day Streak</div><div className="stat-sub">present</div></div>
                 </div>
               </div>
             </div>

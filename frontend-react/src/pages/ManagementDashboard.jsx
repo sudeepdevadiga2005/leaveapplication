@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api'
 import Sidebar from '../components/Sidebar'
 import Toast from '../components/Toast'
@@ -57,20 +57,20 @@ export default function ManagementDashboard() {
       if (modalAction === 'approve') await api.approveLeave(modal.id, { remarks: remarks || 'Approved by Management.' })
       if (modalAction === 'reject')  await api.rejectLeave(modal.id,  { remarks: remarks || 'Rejected by Management.' })
       setModal(null); await load()
-      showToast(modalAction === 'approve' ? '✓ Approved' : '✗ Rejected',
+      showToast(modalAction === 'approve' ? 'Approved' : ' Rejected',
         `Leave ${modalAction}d by Management.`, modalAction === 'approve' ? 'success' : 'error')
     } catch (e) { showToast('Error', e.message, 'error') }
   }
 
   const addClass = async () => {
     if (!newClass.class_name) { showToast('Missing', 'Class name required', 'warning'); return }
-    try { await api.createClass(newClass); await load(); setNewClass({class_name:'',department:'',semester:'',section:''}); showToast('Created ✓', 'Class added.', 'success') }
+    try { await api.createClass(newClass); await load(); setNewClass({class_name:'',department:'',semester:'',section:''}); showToast('Created ', 'Class added.', 'success') }
     catch (e) { showToast('Error', e.message, 'error') }
   }
 
   const addSubject = async () => {
     if (!newSubject.subject_name) { showToast('Missing', 'Subject name required', 'warning'); return }
-    try { await api.createSubject(newSubject); await load(); setNewSubject({subject_name:'',subject_code:'',department:''}); showToast('Created ✓', 'Subject added.', 'success') }
+    try { await api.createSubject(newSubject); await load(); setNewSubject({subject_name:'',subject_code:'',department:''}); showToast('Created ', 'Subject added.', 'success') }
     catch (e) { showToast('Error', e.message, 'error') }
   }
 
@@ -78,7 +78,7 @@ export default function ManagementDashboard() {
     if (!newAssign.lecturer_id || !newAssign.class_id || !newAssign.subject_id) {
       showToast('Missing', 'Select lecturer, class and subject', 'warning'); return
     }
-    try { await api.assignLecturer(newAssign); await load(); setNewAssign({lecturer_id:'',class_id:'',subject_id:''}); showToast('Assigned ✓', 'Lecturer assigned.', 'success') }
+    try { await api.assignLecturer(newAssign); await load(); setNewAssign({lecturer_id:'',class_id:'',subject_id:''}); showToast('Assigned ', 'Lecturer assigned.', 'success') }
     catch (e) { showToast('Error', e.message, 'error') }
   }
 
@@ -101,15 +101,15 @@ export default function ManagementDashboard() {
                 <td>
                   {(l.status==='Pending with Management'||l.status==='Forwarded to Management') && (
                     <div style={{display:'flex',gap:4}}>
-                      <button className="btn btn-sm btn-success" onClick={()=>{setModal(l);setModalAction('approve');setRemarks('')}}>✓</button>
-                      <button className="btn btn-sm btn-danger"  onClick={()=>{setModal(l);setModalAction('reject');setRemarks('')}}>✗</button>
+                      <button className="btn btn-sm btn-success" onClick={()=>{setModal(l);setModalAction('approve');setRemarks('')}}></button>
+                      <button className="btn btn-sm btn-danger"  onClick={()=>{setModal(l);setModalAction('reject');setRemarks('')}}></button>
                     </div>
                   )}
                 </td>
               )}
             </tr>
           ))}
-          {!leaves.length && <tr><td colSpan={showActions?9:8}><div className="empty-state"><div className="empty-icon">📭</div><p>No records</p></div></td></tr>}
+          {!leaves.length && <tr><td colSpan={showActions?9:8}><div className="empty-state"><p>No records</p></div></td></tr>}
         </tbody>
       </table>
     </div>
@@ -127,29 +127,29 @@ export default function ManagementDashboard() {
         {/* ── DASHBOARD ── */}
         {page === 'dashboard' && (
           <div className="fade-in">
-            <div className="topbar"><div className="topbar-left"><h1>{greet}, Admin 👋</h1><p>Management overview — AbsentAlert</p></div></div>
+            <div className="topbar"><div className="topbar-left"><h1>{greet}, Admin</h1><p>Management overview — AbsentAlert</p></div></div>
             <div className="stats-grid">
-              <div className="stat-card c-yellow"><div className="stat-icon">⏳</div><div className="stat-value">{stats.pending_management||0}</div><div className="stat-label">Pending (Mgmt)</div><div className="stat-sub">need your action</div></div>
-              <div className="stat-card c-teal"><div className="stat-icon">✅</div><div className="stat-value">{stats.approved||0}</div><div className="stat-label">Total Approved</div><div className="stat-sub">all roles</div></div>
-              <div className="stat-card c-blue"><div className="stat-icon">🎓</div><div className="stat-value">{stats.total_students||0}</div><div className="stat-label">Students</div><div className="stat-sub">registered</div></div>
-              <div className="stat-card c-red"><div className="stat-icon">👨‍🏫</div><div className="stat-value">{stats.total_lecturers||0}</div><div className="stat-label">Lecturers</div><div className="stat-sub">registered</div></div>
+              <div className="stat-card c-yellow"><div className="stat-icon">PND</div><div className="stat-value">{stats.pending_management||0}</div><div className="stat-label">Pending (Mgmt)</div><div className="stat-sub">need your action</div></div>
+              <div className="stat-card c-teal"><div className="stat-icon">APR</div><div className="stat-value">{stats.approved||0}</div><div className="stat-label">Total Approved</div><div className="stat-sub">all roles</div></div>
+              <div className="stat-card c-blue"><div className="stat-icon">AA</div><div className="stat-value">{stats.total_students||0}</div><div className="stat-label">Students</div><div className="stat-sub">registered</div></div>
+              <div className="stat-card c-red"><div className="stat-icon">LEC</div><div className="stat-value">{stats.total_lecturers||0}</div><div className="stat-label">Lecturers</div><div className="stat-sub">registered</div></div>
             </div>
             <div className="stats-grid">
-              <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{stats.total_leaves||0}</div><div className="stat-label">Total Leaves</div></div>
-              <div className="stat-card c-blue"><div className="stat-icon">📨</div><div className="stat-value">{stats.forwarded||0}</div><div className="stat-label">Forwarded</div></div>
-              <div className="stat-card c-yellow"><div className="stat-icon">⏳</div><div className="stat-value">{stats.pending_lecturer||0}</div><div className="stat-label">With Lecturer</div></div>
-              <div className="stat-card c-red"><div className="stat-icon">❌</div><div className="stat-value">{stats.rejected||0}</div><div className="stat-label">Rejected</div></div>
+              <div className="stat-card"><div className="stat-icon">ALL</div><div className="stat-value">{stats.total_leaves||0}</div><div className="stat-label">Total Leaves</div></div>
+              <div className="stat-card c-blue"><div className="stat-icon">FWD</div><div className="stat-value">{stats.forwarded||0}</div><div className="stat-label">Forwarded</div></div>
+              <div className="stat-card c-yellow"><div className="stat-icon">PND</div><div className="stat-value">{stats.pending_lecturer||0}</div><div className="stat-label">With Lecturer</div></div>
+              <div className="stat-card c-red"><div className="stat-icon">REJ</div><div className="stat-value">{stats.rejected||0}</div><div className="stat-label">Rejected</div></div>
             </div>
             <div className="grid-2-1">
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title"><div className="card-icon">📨</div>Forwarded / Pending Leaves</div>
+                  <div className="card-title"><div className="card-icon">—</div>Forwarded / Pending Leaves</div>
                   <button className="btn btn-ghost btn-sm" onClick={()=>setPage('forwarded')}>View All →</button>
                 </div>
                 <LeaveTable leaves={[...forwarded, ...lecLeaves.filter(l=>l.status==='Pending with Management')].slice(0,5)} showActions={true} />
               </div>
               <div className="card">
-                <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">🔗</div>Recent Assignments</div>
+                <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">—</div>Recent Assignments</div>
                 {assignments.slice(-6).reverse().map(a => (
                   <div key={a.id} className="qs-row">
                     <span className="qs-label" style={{fontSize:'.8rem'}}>{a.lecturer_name}</span>
@@ -167,7 +167,7 @@ export default function ManagementDashboard() {
           <div className="fade-in">
             <div className="topbar"><div className="topbar-left"><h1>Lecturer Assignments</h1><p>Assign lecturers to classes and subjects</p></div></div>
             <div className="card" style={{marginBottom:'1.5rem'}}>
-              <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">➕</div>New Assignment</div>
+              <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">—</div>New Assignment</div>
               <div className="form-grid" style={{gridTemplateColumns:'1fr 1fr 1fr'}}>
                 <div className="form-group">
                   <label className="form-label">Lecturer</label>
@@ -194,7 +194,7 @@ export default function ManagementDashboard() {
               <button className="btn btn-primary" onClick={addAssignment}>Assign Lecturer →</button>
             </div>
             <div className="card">
-              <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">📋</div>Current Assignments</div>
+              <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">—</div>Current Assignments</div>
               <div className="table-wrap">
                 <table>
                   <thead><tr><th>Lecturer</th><th>Class</th><th>Subject</th><th>Department</th><th>Action</th></tr></thead>
@@ -223,7 +223,7 @@ export default function ManagementDashboard() {
             <div className="grid-1-1">
               <div>
                 <div className="card" style={{marginBottom:'1rem'}}>
-                  <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">🏫</div>Add Class</div>
+                  <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">—</div>Add Class</div>
                   <div className="form-grid">
                     <div className="form-group"><label className="form-label">Class Name *</label><input className="form-control" value={newClass.class_name} onChange={e=>setNewClass(c=>({...c,class_name:e.target.value}))} placeholder="CS-A" /></div>
                     <div className="form-group"><label className="form-label">Department</label><input className="form-control" value={newClass.department} onChange={e=>setNewClass(c=>({...c,department:e.target.value}))} placeholder="Computer Science" /></div>
@@ -233,19 +233,19 @@ export default function ManagementDashboard() {
                   <button className="btn btn-primary btn-sm" onClick={addClass}>Add Class</button>
                 </div>
                 <div className="card">
-                  <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">📋</div>Classes ({classes.length})</div>
+                  <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">—</div>Classes ({classes.length})</div>
                   {classes.map(c => (
                     <div key={c.id} className="qs-row">
                       <div><span style={{color:'var(--text-1)',fontWeight:500}}>{c.class_name}</span> <span className="td-muted"> · {c.department} · Sem {c.semester}</span></div>
                       <button className="btn btn-sm btn-danger" onClick={async()=>{await api.deleteClass(c.id);await load()}}>✕</button>
                     </div>
                   ))}
-                  {!classes.length && <div className="empty-state"><div className="empty-icon">🏫</div><p>No classes yet</p></div>}
+                  {!classes.length && <div className="empty-state"><p>No classes yet</p></div>}
                 </div>
               </div>
               <div>
                 <div className="card" style={{marginBottom:'1rem'}}>
-                  <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">📚</div>Add Subject</div>
+                  <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">—</div>Add Subject</div>
                   <div className="form-group"><label className="form-label">Subject Name *</label><input className="form-control" value={newSubject.subject_name} onChange={e=>setNewSubject(s=>({...s,subject_name:e.target.value}))} placeholder="Data Structures" /></div>
                   <div className="form-grid">
                     <div className="form-group"><label className="form-label">Subject Code</label><input className="form-control" value={newSubject.subject_code} onChange={e=>setNewSubject(s=>({...s,subject_code:e.target.value}))} placeholder="CS301" /></div>
@@ -254,14 +254,14 @@ export default function ManagementDashboard() {
                   <button className="btn btn-primary btn-sm" onClick={addSubject}>Add Subject</button>
                 </div>
                 <div className="card">
-                  <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">📋</div>Subjects ({subjects.length})</div>
+                  <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">—</div>Subjects ({subjects.length})</div>
                   {subjects.map(s => (
                     <div key={s.id} className="qs-row">
                       <div><span style={{color:'var(--text-1)',fontWeight:500}}>{s.subject_name}</span> <span className="td-muted"> · {s.subject_code}</span></div>
                       <button className="btn btn-sm btn-danger" onClick={async()=>{await api.deleteSubject(s.id);await load()}}>✕</button>
                     </div>
                   ))}
-                  {!subjects.length && <div className="empty-state"><div className="empty-icon">📚</div><p>No subjects yet</p></div>}
+                  {!subjects.length && <div className="empty-state"><p>No subjects yet</p></div>}
                 </div>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function ManagementDashboard() {
                         <td>{s.semester||'—'}</td>
                       </tr>
                     ))}
-                    {!students.length && <tr><td colSpan={6}><div className="empty-state"><div className="empty-icon">🎓</div><p>No students registered</p></div></td></tr>}
+                    {!students.length && <tr><td colSpan={6}><div className="empty-state"><div className="empty-icon">AA</div><p>No students registered</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -340,7 +340,7 @@ export default function ManagementDashboard() {
                         </tr>
                       )
                     })}
-                    {!lecturers.length && <tr><td colSpan={5}><div className="empty-state"><div className="empty-icon">👨‍🏫</div><p>No lecturers registered</p></div></td></tr>}
+                    {!lecturers.length && <tr><td colSpan={5}><div className="empty-state"><p>No lecturers registered</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -391,8 +391,8 @@ export default function ManagementDashboard() {
               <textarea className="form-control" value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Add a note…" />
             </div>
             <div className="modal-actions">
-              <button className="btn btn-success" onClick={confirmAction}>✓ Approve</button>
-              <button className="btn btn-danger"  onClick={()=>{setModalAction('reject');confirmAction()}}>✗ Reject</button>
+              <button className="btn btn-success" onClick={confirmAction}>Approve</button>
+              <button className="btn btn-danger"  onClick={()=>{setModalAction('reject');confirmAction()}}> Reject</button>
               <button className="btn btn-secondary" onClick={()=>setModal(null)}>Cancel</button>
             </div>
           </div>

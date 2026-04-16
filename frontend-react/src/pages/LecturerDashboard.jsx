@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../api'
 import Sidebar from '../components/Sidebar'
@@ -55,7 +55,7 @@ export default function LecturerDashboard() {
       setModal(null)
       await load()
       showToast(
-        modalAction === 'approve' ? '✓ Approved' : modalAction === 'reject' ? '✗ Rejected' : '→ Forwarded',
+        modalAction === 'approve' ? 'Approved' : modalAction === 'reject' ? ' Rejected' : 'Forwarded',
         `Leave has been ${modalAction}d successfully.`,
         modalAction === 'approve' ? 'success' : modalAction === 'reject' ? 'error' : 'info'
       )
@@ -69,7 +69,7 @@ export default function LecturerDashboard() {
       await api.applyLeave({ leave_type: leaveType, from_date: fromDate, to_date: toDate, days, reason })
       setLeaveType(''); setReason(''); setFromDate(today); setToDate(today)
       await load()
-      showToast('Submitted ✓', 'Your leave request sent to Management.', 'success')
+      showToast('Submitted ', 'Your leave request sent to Management.', 'success')
       setPage('my-leaves')
     } catch (e) { showToast('Error', e.message, 'error') }
   }
@@ -90,20 +90,20 @@ export default function LecturerDashboard() {
           <div className="fade-in">
             <div className="topbar">
               <div className="topbar-left">
-                <h1>{greet}, {user?.lecturer_name?.split(' ').pop()} 👋</h1>
+                <h1>{greet}, {user?.lecturer_name?.split(' ').pop() || 'Lecturer'}</h1>
                 <p>Lecturer leave management overview</p>
               </div>
             </div>
             <div className="stats-grid">
-              <div className="stat-card c-yellow"><div className="stat-icon">⏳</div><div className="stat-value">{pending.length}</div><div className="stat-label">Pending Requests</div><div className="stat-sub">student leaves</div></div>
-              <div className="stat-card c-teal"><div className="stat-icon">✅</div><div className="stat-value">{requests.filter(l=>l.status==='Approved by Lecturer').length}</div><div className="stat-label">Approved</div><div className="stat-sub">by you</div></div>
-              <div className="stat-card c-blue"><div className="stat-icon">📨</div><div className="stat-value">{requests.filter(l=>l.status==='Forwarded to Management').length}</div><div className="stat-label">Forwarded</div><div className="stat-sub">to management</div></div>
-              <div className="stat-card c-red"><div className="stat-icon">📄</div><div className="stat-value">{myLeaves.length}</div><div className="stat-label">My Leaves</div><div className="stat-sub">applied</div></div>
+              <div className="stat-card c-yellow"><div className="stat-icon">PND</div><div className="stat-value">{pending.length}</div><div className="stat-label">Pending Requests</div><div className="stat-sub">student leaves</div></div>
+              <div className="stat-card c-teal"><div className="stat-icon">APR</div><div className="stat-value">{requests.filter(l=>l.status==='Approved by Lecturer').length}</div><div className="stat-label">Approved</div><div className="stat-sub">by you</div></div>
+              <div className="stat-card c-blue"><div className="stat-icon">FWD</div><div className="stat-value">{requests.filter(l=>l.status==='Forwarded to Management').length}</div><div className="stat-label">Forwarded</div><div className="stat-sub">to management</div></div>
+              <div className="stat-card c-red"><div className="stat-icon">DOC</div><div className="stat-value">{myLeaves.length}</div><div className="stat-label">My Leaves</div><div className="stat-sub">applied</div></div>
             </div>
             <div className="grid-2-1">
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title"><div className="card-icon">⏳</div>Pending Student Requests</div>
+                  <div className="card-title"><div className="card-icon">—</div>Pending Student Requests</div>
                   <button className="btn btn-ghost btn-sm" onClick={() => setPage('requests')}>View All →</button>
                 </div>
                 <div className="table-wrap">
@@ -116,18 +116,18 @@ export default function LecturerDashboard() {
                         <td>{l.from_date}{l.from_date!==l.to_date?' → '+l.to_date:''}</td>
                         <td>{l.days}d</td>
                         <td style={{display:'flex',gap:4}}>
-                          <button className="btn btn-sm btn-success" onClick={() => openModal(l,'approve')}>✓</button>
-                          <button className="btn btn-sm btn-danger"  onClick={() => openModal(l,'reject')}>✗</button>
+                          <button className="btn btn-sm btn-success" onClick={() => openModal(l,'approve')}></button>
+                          <button className="btn btn-sm btn-danger"  onClick={() => openModal(l,'reject')}></button>
                           <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer'}} onClick={() => openModal(l,'forward')}>→</button>
                         </td>
                       </tr>
                     ))}
-                    {!pending.length && <tr><td colSpan={5}><div className="empty-state"><div className="empty-icon">🎉</div><p>All caught up!</p></div></td></tr>}
+                    {!pending.length && <tr><td colSpan={5}><div className="empty-state"><p>All caught up!</p></div></td></tr>}
                   </tbody></table>
                 </div>
               </div>
               <div className="card">
-                <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">📊</div>Quick Stats</div>
+                <div className="card-title" style={{marginBottom:'1rem'}}><div className="card-icon">—</div>Quick Stats</div>
                 {[
                   {label:'Total Student Requests', val: requests.length},
                   {label:'Pending',   val: pending.length,                                              color:'var(--pending)'},
@@ -166,15 +166,15 @@ export default function LecturerDashboard() {
                         <td>
                           {l.status === 'Pending with Lecturer' && (
                             <div style={{display:'flex',gap:4}}>
-                              <button className="btn btn-sm btn-success" onClick={() => openModal(l,'approve')}>✓ Approve</button>
-                              <button className="btn btn-sm btn-danger"  onClick={() => openModal(l,'reject')}>✗ Reject</button>
-                              <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer'}} onClick={() => openModal(l,'forward')}>→ Forward</button>
+                              <button className="btn btn-sm btn-success" onClick={() => openModal(l,'approve')}>Approve</button>
+                              <button className="btn btn-sm btn-danger"  onClick={() => openModal(l,'reject')}> Reject</button>
+                              <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer'}} onClick={() => openModal(l,'forward')}>Forward</button>
                             </div>
                           )}
                         </td>
                       </tr>
                     ))}
-                    {!requests.length && <tr><td colSpan={9}><div className="empty-state"><div className="empty-icon">📭</div><p>No requests for your classes</p></div></td></tr>}
+                    {!requests.length && <tr><td colSpan={9}><div className="empty-state"><p>No requests for your classes</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -201,7 +201,7 @@ export default function LecturerDashboard() {
                         <td className="td-muted td-clip">{l.remarks||'—'}</td>
                       </tr>
                     ))}
-                    {!requests.length && <tr><td colSpan={8}><div className="empty-state"><div className="empty-icon">📭</div><p>No records</p></div></td></tr>}
+                    {!requests.length && <tr><td colSpan={8}><div className="empty-state"><p>No records</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -214,17 +214,17 @@ export default function LecturerDashboard() {
           <div className="fade-in">
             <div className="topbar"><div className="topbar-left"><h1>Apply for Leave</h1><p>Your request goes directly to Management</p></div></div>
             <div className="card">
-              <div className="card-title" style={{marginBottom:'1.5rem'}}><div className="card-icon">✍️</div>Leave Application</div>
+              <div className="card-title" style={{marginBottom:'1.5rem'}}><div className="card-icon">—</div>Leave Application</div>
               <div className="form-grid">
                 <div className="form-group">
                   <label className="form-label">Leave Type</label>
                   <select className="form-control" value={leaveType} onChange={e=>setLeaveType(e.target.value)}>
                     <option value="">Select…</option>
-                    <option value="medical">🏥 Medical</option>
-                    <option value="personal">👤 Personal</option>
-                    <option value="family">👨‍👩‍👧 Family Emergency</option>
-                    <option value="academic">🎓 Academic</option>
-                    <option value="other">📌 Other</option>
+                    <option value="medical">Medical</option>
+                    <option value="personal">Personal</option>
+                    <option value="family">Family Emergency</option>
+                    <option value="academic">Academic</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -247,7 +247,7 @@ export default function LecturerDashboard() {
                 <textarea className="form-control" value={reason} onChange={e=>setReason(e.target.value)} placeholder="Explain your reason…" />
               </div>
               <div style={{padding:'.6rem .875rem',background:'rgba(96,165,250,.06)',border:'1px solid rgba(96,165,250,.15)',borderRadius:8,fontSize:'.78rem',color:'var(--text-3)',marginBottom:'1rem'}}>
-                ℹ️ Lecturer leave requests go directly to Management for approval.
+                Lecturer leave requests go directly to Management for approval.
               </div>
               <button className="btn btn-primary" onClick={submitLeave}>Submit Application →</button>
             </div>
@@ -273,7 +273,7 @@ export default function LecturerDashboard() {
                         <td className="td-muted td-clip">{l.remarks||'—'}</td>
                       </tr>
                     ))}
-                    {!myLeaves.length && <tr><td colSpan={8}><div className="empty-state"><div className="empty-icon">📭</div><p>No leaves applied yet</p></div></td></tr>}
+                    {!myLeaves.length && <tr><td colSpan={8}><div className="empty-state"><p>No leaves applied yet</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -327,9 +327,9 @@ export default function LecturerDashboard() {
               <textarea className="form-control" value={remarks} onChange={e=>setRemarks(e.target.value)} placeholder="Add a note…" />
             </div>
             <div className="modal-actions">
-              {modalAction==='approve' && <button className="btn btn-success" onClick={confirmAction}>✓ Approve</button>}
-              {modalAction==='reject'  && <button className="btn btn-danger"  onClick={confirmAction}>✗ Reject</button>}
-              {modalAction==='forward' && <button className="btn" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)'}} onClick={confirmAction}>→ Forward to Management</button>}
+              {modalAction==='approve' && <button className="btn btn-success" onClick={confirmAction}>Approve</button>}
+              {modalAction==='reject'  && <button className="btn btn-danger"  onClick={confirmAction}> Reject</button>}
+              {modalAction==='forward' && <button className="btn" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)'}} onClick={confirmAction}>Forward to Management</button>}
               <button className="btn btn-secondary" onClick={()=>setModal(null)}>Cancel</button>
             </div>
           </div>
