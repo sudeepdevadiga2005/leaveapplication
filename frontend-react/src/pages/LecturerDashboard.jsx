@@ -51,13 +51,12 @@ export default function LecturerDashboard() {
     try {
       if (modalAction === 'approve') await api.approveLeave(modal.id, { remarks: remarks || 'Approved.' })
       if (modalAction === 'reject')  await api.rejectLeave(modal.id,  { remarks: remarks || 'Rejected.' })
-      if (modalAction === 'forward') await api.forwardLeave(modal.id, { remarks: remarks || 'Forwarded to management.' })
       setModal(null)
       await load()
       showToast(
-        modalAction === 'approve' ? 'Approved' : modalAction === 'reject' ? ' Rejected' : 'Forwarded',
+        modalAction === 'approve' ? 'Approved' : 'Rejected',
         `Leave has been ${modalAction}d successfully.`,
-        modalAction === 'approve' ? 'success' : modalAction === 'reject' ? 'error' : 'info'
+        modalAction === 'approve' ? 'success' : 'error'
       )
     } catch (e) { showToast('Error', e.message, 'error') }
   }
@@ -131,7 +130,7 @@ export default function LecturerDashboard() {
                   {label:'Pending',   val: pending.length,                                              color:'var(--pending)'},
                   {label:'Approved',  val: requests.filter(l=>l.status==='Approved by Lecturer').length, color:'var(--approved)'},
                   {label:'Rejected',  val: requests.filter(l=>l.status==='Rejected by Lecturer').length, color:'var(--rejected)'},
-                                    {label:'My Leaves', val: myLeaves.length},
+                  {label:'My Leaves', val: myLeaves.length},
                 ].map(d => (
                   <div key={d.label} className="qs-row">
                     <span className="qs-label">{d.label}</span>
@@ -176,16 +175,6 @@ export default function LecturerDashboard() {
               </div>
             </div>
           </div>
-        )}
-                    ))}
-                    {!requests.length && <tr><td colSpan={8}><div className="empty-state"><p>No records</p></div></td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ── APPLY MY LEAVE ── */}
         {page === 'apply' && (
           <div className="fade-in">
@@ -305,8 +294,8 @@ export default function LecturerDashboard() {
             </div>
             <div className="modal-actions">
               {modalAction==='approve' && <button className="btn btn-success" onClick={confirmAction}>Approve</button>}
-              {modalAction==='reject'  && <button className="btn btn-danger"  onClick={confirmAction}> Reject</button>}
-                            <button className="btn btn-secondary" onClick={()=>setModal(null)}>Cancel</button>
+              {modalAction==='reject'  && <button className="btn btn-danger"  onClick={confirmAction}>Reject</button>}
+              <button className="btn btn-secondary" onClick={()=>setModal(null)}>Cancel</button>
             </div>
           </div>
         </div>
