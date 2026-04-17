@@ -188,3 +188,21 @@ def forward(lid):
     leave.updated_at   = datetime.utcnow()
     db.session.commit()
     return jsonify(leave.to_dict()), 200
+
+# ── Student Applied & Approved leaves → Management report ─────
+@leaves_bp.route('/student-report', methods=['GET'])
+def student_report():
+    _, role = current_user()
+    if role != 'management':
+        return jsonify({'error': 'Forbidden'}), 403
+    leaves = Leave.query.filter(
+        Leave.applicant_role == 'student',
+        Leave.status.in_([
+            'Pending with Lecturer',
+            'Pending with Management',
+            'Forwarded to Management',
+            'Approved by Lecturer',
+            'Approved by Management',
+        ])
+    ).order_by(Leave.id.desc()).all()
+    return jsonify([l.to_dict() for l in leaves]), 200

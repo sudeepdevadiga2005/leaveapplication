@@ -19,6 +19,7 @@ const NAV = {
   ],
   management: [
     { id:'dashboard',       label:'Dashboard' },
+    { id:'student-report',  label:'Student Leave Report' },
     { id:'assignments',     label:'Lecturer Assignments' },
     { id:'classes',         label:'Classes & Subjects' },
     { id:'lecturer-leaves', label:'Lecturer Leaves', badge:true },

@@ -47,4 +47,5 @@ export const api = {
   getStudents:       ()    => req('GET',    '/admin/students'),
   getLecturers:      ()    => req('GET',    '/admin/lecturers'),
   getDashboard:      ()    => req('GET',    '/admin/dashboard'),
+  getStudentReport:  ()    => req('GET',    '/leaves/student-report'),
 }

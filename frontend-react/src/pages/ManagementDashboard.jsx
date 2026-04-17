@@ -26,6 +26,7 @@ export default function ManagementDashboard() {
   const [lecLeaves, setLecLeaves] = useState([])
   const [forwarded, setForwarded] = useState([])
   const [allLeaves, setAllLeaves] = useState([])
+  const [studentReport, setStudentReport] = useState([])
   const [modal, setModal]         = useState(null)
   const [modalAction, setModalAction] = useState('')
   const [remarks, setRemarks]     = useState('')
@@ -36,14 +37,15 @@ export default function ManagementDashboard() {
   const [newAssign,  setNewAssign]  = useState({ lecturer_id:'', class_id:'', subject_id:'' })
 
   const load = useCallback(async () => {
-    const [s, c, sub, l, st, a, ll, fw, al] = await Promise.all([
+    const [s, c, sub, l, st, a, ll, fw, al, sr] = await Promise.all([
       api.getDashboard(), api.getClasses(), api.getSubjects(),
       api.getLecturers(), api.getStudents(), api.getAssignments(),
       api.lecturerRequests(), api.forwardedLeaves(), api.allLeaves(),
+      api.getStudentReport(),
     ])
     setStats(s); setClasses(c); setSubjects(sub); setLecturers(l)
     setStudents(st); setAssignments(a); setLecLeaves(ll)
-    setForwarded(fw); setAllLeaves(al)
+    setForwarded(fw); setAllLeaves(al); setStudentReport(sr)
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -157,6 +159,85 @@ export default function ManagementDashboard() {
                   </div>
                 ))}
                 {!assignments.length && <div className="empty-state"><div className="empty-icon"></div><p>No assignments yet</p></div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── STUDENT LEAVE REPORT ── */}
+        {page === 'student-report' && (
+          <div className="fade-in">
+            <div className="topbar">
+              <div className="topbar-left">
+                <h1>Student Leave Report</h1>
+                <p>All student leaves that are applied or approved</p>
+              </div>
+            </div>
+            <div className="stats-grid">
+              <div className="stat-card c-yellow">
+                <div className="stat-value">{studentReport.filter(l => l.status.includes('Pending')).length}</div>
+                <div className="stat-label">Applied / Pending</div>
+              </div>
+              <div className="stat-card c-teal">
+                <div className="stat-value">{studentReport.filter(l => l.status.includes('Approved')).length}</div>
+                <div className="stat-label">Approved</div>
+              </div>
+              <div className="stat-card c-blue">
+                <div className="stat-value">{studentReport.filter(l => l.status.includes('Forwarded')).length}</div>
+                <div className="stat-label">Forwarded</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{studentReport.length}</div>
+                <div className="stat-label">Total</div>
+              </div>
+            </div>
+            <div className="card">
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Student Name</th>
+                      <th>Class</th>
+                      <th>Department</th>
+                      <th>Leave Type</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Days</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                      <th>Applied On</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentReport.map((l, i) => (
+                      <tr key={l.id}>
+                        <td className="td-muted">{i + 1}</td>
+                        <td className="td-primary">{l.applicant_name}</td>
+                        <td>{l.class_name}</td>
+                        <td>{l.department}</td>
+                        <td style={{ textTransform:'capitalize' }}>{l.leave_type}</td>
+                        <td>{l.from_date}</td>
+                        <td>{l.to_date}</td>
+                        <td>{l.days}d</td>
+                        <td className="td-clip">{l.reason}</td>
+                        <td>
+                          <span className={`badge ${
+                            l.status.includes('Approved') ? 'badge-approved' :
+                            l.status.includes('Forwarded') ? 'badge-info' :
+                            'badge-pending'
+                          }`}>{l.status}</span>
+                        </td>
+                        <td className="td-muted">{l.created_at?.slice(0,10)}</td>
+                      </tr>
+                    ))}
+                    {!studentReport.length && (
+                      <tr><td colSpan={11}>
+                        <div className="empty-state"><p>No student leaves found</p></div>
+                      </td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
