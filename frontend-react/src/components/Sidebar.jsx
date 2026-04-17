@@ -1,4 +1,4 @@
-﻿import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 
 const NAV = {
   student: [
@@ -18,10 +18,11 @@ const NAV = {
   ],
   management: [
     { id:'dashboard',       label:'Dashboard' },
+    { id:'student-leaves',  label:'Student Leaves',  badge:true },
+    { id:'lecturer-leaves', label:'Lecturer Leaves', badge:true },
     { id:'assignments',     label:'Lecturer Assignments' },
     { id:'classes',         label:'Classes & Subjects' },
     { id:'add-lecturer',    label:'Add Lecturer' },
-    { id:'lecturer-leaves', label:'Lecturer Leaves', badge:true },
     { id:'students',        label:'Students' },
     { id:'lecturers',       label:'Lecturers' },
     { id:'profile',         label:'Profile' },

@@ -1,105 +1,150 @@
-"""
-AbsentAlert — Email Notification Service
-Sends emails on leave events using Flask-Mail + Gmail SMTP.
-
-Setup:
-  1. Enable 2-Step Verification on your Gmail account
-  2. Generate an App Password: Google Account > Security > App Passwords
-  3. Set MAIL_USERNAME and MAIL_PASSWORD in config below (or use .env)
-"""
-
 from flask_mail import Mail, Message
+from flask import current_app
 
 mail = Mail()
 
-# ── Templates ─────────────────────────────────────────────────
-
-def _send(app, subject, recipients, body):
+def _send(subject, recipients, body):
     """Send a single email. Silently logs errors so app never crashes."""
     try:
-        with app.app_context():
-            msg = Message(
-                subject=subject,
-                sender=app.config.get('MAIL_USERNAME', 'noreply@absentalert.com'),
-                recipients=recipients if isinstance(recipients, list) else [recipients],
-            )
-            msg.body = body
-            mail.send(msg)
-            print(f"[MAIL] Sent to {recipients}: {subject}")
+        msg = Message(
+            subject=subject,
+            sender=current_app.config.get('MAIL_USERNAME', 'noreply@absentalert.com'),
+            recipients=recipients if isinstance(recipients, list) else [recipients],
+        )
+        msg.body = body
+        mail.send(msg)
+        print(f"[MAIL] Sent to {recipients}: {subject}")
     except Exception as e:
         print(f"[MAIL ERROR] {e}")
 
+# 1. Student submits leave → Notify Lecturer
+def notify_student_leave_submitted_to_lecturer(lecturer_name, lecturer_email, student_name, leave_type, from_date, to_date, reason):
+    subject = f"[AbsentAlert] Action Required: New Leave Request from {student_name}"
+    body = f"""Dear {lecturer_name},
 
-def notify_leave_submitted(app, student_name, leave_type, from_date, to_date,
-                            reason, lecturer_email, lecturer_name):
-    """Student submits leave → notify assigned lecturer."""
-    _send(
-        app,
-        subject=f"[AbsentAlert] New Leave Request from {student_name}",
-        recipients=lecturer_email,
-        body=f"""Dear {lecturer_name},
+A new leave request has been submitted by {student_name} and requires your initial review.
 
-A new leave request has been submitted and requires your review.
+Details:
+Student    : {student_name}
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+Reason     : {reason}
 
-Student   : {student_name}
-Leave Type: {leave_type.capitalize()}
-From      : {from_date}
-To        : {to_date}
-Reason    : {reason}
-
-Please log in to AbsentAlert to approve or reject this request.
+Please log in to the Lecturer Dashboard to Approve (and forward to Admin) or Reject this request.
 
 Regards,
-AbsentAlert System
-"""
-    )
+AbsentAlert System"""
+    _send(subject, lecturer_email, body)
 
+# 2. Lecturer rejects student leave → Notify Student
+def notify_student_leave_rejected_by_lecturer(student_name, student_email, leave_type, from_date, to_date, remarks):
+    subject = f"[AbsentAlert] Leave Request Status Update - Rejected"
+    body = f"""Dear {student_name},
 
-def notify_leave_status(app, student_name, student_email,
-                         leave_type, from_date, to_date, status, remarks):
-    """Lecturer approves/rejects student leave → notify student."""
-    _send(
-        app,
-        subject=f"[AbsentAlert] Your Leave Request has been {status}",
-        recipients=student_email,
-        body=f"""Dear {student_name},
+Your leave request has been reviewed by your Lecturer and has been REJECTED.
 
-Your leave request has been reviewed.
-
-Leave Type: {leave_type.capitalize()}
-From      : {from_date}
-To        : {to_date}
-Status    : {status}
-Remarks   : {remarks or 'No remarks provided.'}
-
-Please log in to AbsentAlert to view the full details.
+Details:
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+Status     : Rejected by Lecturer
+Remarks    : {remarks or 'No remarks provided.'}
 
 Regards,
-AbsentAlert System
-"""
-    )
+AbsentAlert System"""
+    _send(subject, student_email, body)
 
+# 3. Lecturer approves and forwards → Notify Student
+def notify_student_leave_approved_by_lecturer(student_name, student_email, leave_type, from_date, to_date):
+    subject = f"[AbsentAlert] Leave Request Status Update - Forwarded"
+    body = f"""Dear {student_name},
 
-def notify_lecturer_leave_status(app, lecturer_name, lecturer_email,
-                                  leave_type, from_date, to_date, status, remarks):
-    """Management approves/rejects lecturer leave → notify lecturer."""
-    _send(
-        app,
-        subject=f"[AbsentAlert] Your Leave Request has been {status}",
-        recipients=lecturer_email,
-        body=f"""Dear {lecturer_name},
+Your leave request has been APPROVED by your Lecturer and has been forwarded to the Admin for final approval.
 
-Your leave request has been reviewed by Management.
+Details:
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+Status     : Approved by Lecturer (Awaiting Admin Decision)
 
-Leave Type: {leave_type.capitalize()}
-From      : {from_date}
-To        : {to_date}
-Status    : {status}
-Remarks   : {remarks or 'No remarks provided.'}
-
-Please log in to AbsentAlert to view the full details.
+You will receive another email once the Admin makes the final decision.
 
 Regards,
-AbsentAlert System
-"""
-    )
+AbsentAlert System"""
+    _send(subject, student_email, body)
+
+# 4. Lecturer approves and forwards → Notify Admin
+def notify_admin_student_leave_forwarded(admin_email, student_name, leave_type, from_date, to_date):
+    subject = f"[AbsentAlert] Action Required: Student Leave Request Forwarded"
+    body = f"""Dear Admin,
+
+A student leave request has been approved by the Lecturer and is now awaiting your final decision.
+
+Details:
+Student    : {student_name}
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+
+Please log in to the Admin Dashboard to review and provide final approval or rejection.
+
+Regards,
+AbsentAlert System"""
+    _send(subject, admin_email, body)
+
+# 5. Admin final decision for student leave → Notify Student
+def notify_student_leave_final_decision(student_name, student_email, leave_type, from_date, to_date, status, remarks):
+    subject = f"[AbsentAlert] Final Decision: Your Leave Request has been {status}"
+    body = f"""Dear {student_name},
+
+The Admin has made a final decision on your leave request.
+
+Details:
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+Status     : {status}
+Remarks    : {remarks or 'No remarks provided.'}
+
+Regards,
+AbsentAlert System"""
+    _send(subject, student_email, body)
+
+# 6. Lecturer submits leave → Notify Admin
+def notify_lecturer_leave_submitted_to_admin(admin_email, lecturer_name, leave_type, from_date, to_date, reason):
+    subject = f"[AbsentAlert] Action Required: New Lecturer Leave Request from {lecturer_name}"
+    body = f"""Dear Admin,
+
+A new leave request has been submitted by Lecturer {lecturer_name}.
+
+Details:
+Lecturer   : {lecturer_name}
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+Reason     : {reason}
+
+Please log in to the Admin Dashboard to review this request.
+
+Regards,
+AbsentAlert System"""
+    _send(subject, admin_email, body)
+
+# 7. Admin final decision for lecturer leave → Notify Lecturer
+def notify_lecturer_leave_final_decision(lecturer_name, lecturer_email, leave_type, from_date, to_date, status, remarks):
+    subject = f"[AbsentAlert] Final Decision: Your Leave Request has been {status}"
+    body = f"""Dear {lecturer_name},
+
+The Admin has made a final decision on your leave request.
+
+Details:
+Leave Type : {leave_type.capitalize()}
+From       : {from_date}
+To         : {to_date}
+Status     : {status}
+Remarks    : {remarks or 'No remarks provided.'}
+
+Regards,
+AbsentAlert System"""
+    _send(subject, lecturer_email, body)

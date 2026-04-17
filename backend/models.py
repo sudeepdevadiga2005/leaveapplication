@@ -105,12 +105,11 @@ class LecturerAssignment(db.Model):
 # Leave statuses
 LEAVE_STATUSES = [
     'Pending with Lecturer',
-    'Approved by Lecturer',
     'Rejected by Lecturer',
-    'Forwarded to Management',
-    'Pending with Management',
-    'Approved by Management',
-    'Rejected by Management',
+    'Approved by Lecturer and Forwarded to Admin',
+    'Pending with Admin',
+    'Approved by Admin',
+    'Rejected by Admin',
 ]
 
 class Leave(db.Model):

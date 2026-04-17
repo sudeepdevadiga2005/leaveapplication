@@ -27,11 +27,11 @@ export const api = {
   myLeaves:          ()    => req('GET',  '/leaves/my'),
   studentRequests:   ()    => req('GET',  '/leaves/student-requests'),
   lecturerRequests:  ()    => req('GET',  '/leaves/lecturer-requests'),
-  forwardedLeaves:   ()    => req('GET',  '/leaves/forwarded'),
+  adminStudentRequests: () => req('GET',  '/leaves/admin/student-requests'),
+  adminLecturerRequests:() => req('GET',  '/leaves/admin/lecturer-requests'),
   allLeaves:         ()    => req('GET',  '/leaves/all'),
   approveLeave:      (id, d) => req('POST', `/leaves/approve/${id}`, d),
   rejectLeave:       (id, d) => req('POST', `/leaves/reject/${id}`, d),
-  forwardLeave:      (id, d) => req('POST', `/leaves/forward/${id}`, d),
 
   // Admin
   createClass:       (d)   => req('POST',   '/admin/create-class', d),
