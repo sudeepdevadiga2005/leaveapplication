@@ -1,7 +1,7 @@
 {
   "name": "absentalert",
   "version": "1.0.0",
-  "description": "Run frontend and backend together",
+  "description": "Run frontend and backend together — run from AbsentAlert/ folder",
   "scripts": {
     "start": "concurrently --kill-others-on-fail \"npm run backend\" \"npm run frontend\"",
     "backend": "py backend/app.py",

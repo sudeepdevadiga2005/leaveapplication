@@ -2,9 +2,10 @@ import os
 import sys
 import traceback
 
-# Ensure backend directory is in path when run from parent folder
-sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# Add backend directory to path so imports work when run from parent folder
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify
@@ -16,7 +17,7 @@ from routes.leaves import leaves_bp
 from routes.admin  import admin_bp
 from routes.notifications import notifs_bp
 
-load_dotenv()
+load_dotenv(os.path.join(_backend_dir, '.env'))
 
 
 def create_app():
@@ -26,7 +27,7 @@ def create_app():
 
     # Server-side filesystem session — fixes cookie issues through Vite proxy
     app.config['SESSION_TYPE']            = 'filesystem'
-    app.config['SESSION_FILE_DIR']        = os.path.join(os.path.dirname(__file__), 'flask_sessions')
+    app.config['SESSION_FILE_DIR']        = os.path.join(_backend_dir, 'flask_sessions')
     app.config['SESSION_PERMANENT']       = False
     app.config['SESSION_USE_SIGNER']      = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
