@@ -115,10 +115,10 @@ export default function LecturerDashboard() {
                         <td style={{textTransform:'capitalize'}}>{l.leave_type}</td>
                         <td>{l.from_date}{l.from_date!==l.to_date?' -> '+l.to_date:''}</td>
                         <td>{l.days}d</td>
-                        <td style={{display:'flex',gap:4}}>
-                          <button className="btn btn-sm btn-success" onClick={() => openModal(l,'approve')}></button>
-                          <button className="btn btn-sm btn-danger"  onClick={() => openModal(l,'reject')}></button>
-                          <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer'}} onClick={() => openModal(l,'forward')}>Fwd</button>
+                        <td style={{display:'flex',gap:6}}>
+                          <button className="btn btn-sm btn-success" style={{minWidth:70,fontWeight:600}} onClick={() => openModal(l,'approve')}>Approve</button>
+                          <button className="btn btn-sm btn-danger"  style={{minWidth:60,fontWeight:600}} onClick={() => openModal(l,'reject')}>Reject</button>
+                          <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer',fontWeight:600}} onClick={() => openModal(l,'forward')}>Forward</button>
                         </td>
                       </tr>
                     ))}

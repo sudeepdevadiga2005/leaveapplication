@@ -52,7 +52,7 @@ export default function ManagementDashboard() {
 
   const h = new Date().getHours()
   const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
-  const pendingCount = (stats.pending_management || 0) + (lecLeaves.filter(l => l.status === 'Pending with Management').length)
+  const pendingCount = lecLeaves.filter(l => l.status === 'Pending with Management').length
 
   const confirmAction = async () => {
     try {
@@ -114,9 +114,19 @@ export default function ManagementDashboard() {
               {showActions && (
                 <td>
                   {(l.status==='Pending with Management'||l.status==='Forwarded to Management') && (
-                    <div style={{display:'flex',gap:4}}>
-                      <button className="btn btn-sm btn-success" onClick={()=>{setModal(l);setModalAction('approve');setRemarks('')}}></button>
-                      <button className="btn btn-sm btn-danger"  onClick={()=>{setModal(l);setModalAction('reject');setRemarks('')}}></button>
+                    <div style={{display:'flex', gap:6}}>
+                      <button
+                        className="btn btn-sm btn-success"
+                        style={{padding:'.4rem .9rem', fontWeight:600, minWidth:80}}
+                        onClick={()=>{setModal(l);setModalAction('approve');setRemarks('')}}>
+                        Approve
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        style={{padding:'.4rem .9rem', fontWeight:600, minWidth:70}}
+                        onClick={()=>{setModal(l);setModalAction('reject');setRemarks('')}}>
+                        Reject
+                      </button>
                     </div>
                   )}
                 </td>
