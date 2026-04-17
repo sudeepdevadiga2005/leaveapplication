@@ -104,7 +104,7 @@ export default function LecturerDashboard() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-icon">—</div>Pending Student Requests</div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setPage('requests')}>View All -></button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setPage('requests')}>View All</button>
                 </div>
                 <div className="table-wrap">
                   <table><thead><tr><th>Student</th><th>Type</th><th>Dates</th><th>Days</th><th>Actions</th></tr></thead>
@@ -118,7 +118,7 @@ export default function LecturerDashboard() {
                         <td style={{display:'flex',gap:4}}>
                           <button className="btn btn-sm btn-success" onClick={() => openModal(l,'approve')}></button>
                           <button className="btn btn-sm btn-danger"  onClick={() => openModal(l,'reject')}></button>
-                          <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer'}} onClick={() => openModal(l,'forward')}>-></button>
+                          <button className="btn btn-sm" style={{background:'var(--blue-dim)',color:'var(--blue)',border:'1px solid rgba(96,165,250,.25)',padding:'.38rem .7rem',fontSize:'.78rem',borderRadius:'var(--r-s)',cursor:'pointer'}} onClick={() => openModal(l,'forward')}>Fwd</button>
                         </td>
                       </tr>
                     ))}
@@ -249,7 +249,7 @@ export default function LecturerDashboard() {
               <div style={{padding:'.6rem .875rem',background:'rgba(96,165,250,.06)',border:'1px solid rgba(96,165,250,.15)',borderRadius:8,fontSize:'.78rem',color:'var(--text-3)',marginBottom:'1rem'}}>
                 Lecturer leave requests go directly to Management for approval.
               </div>
-              <button className="btn btn-primary" onClick={submitLeave}>Submit Application -></button>
+              <button className="btn btn-primary" onClick={submitLeave}>Submit Application</button>
             </div>
           </div>
         )}
@@ -316,7 +316,7 @@ export default function LecturerDashboard() {
               <div className="modal-field"><label>Student</label><p>{modal.applicant_name}</p></div>
               <div className="modal-field"><label>Class</label><p>{modal.class_name}</p></div>
               <div className="modal-field"><label>Leave Type</label><p style={{textTransform:'capitalize'}}>{modal.leave_type}</p></div>
-              <div className="modal-field"><label>Duration</label><p>{modal.from_date} -> {modal.to_date} ({modal.days}d)</p></div>
+              <div className="modal-field"><label>Duration</label><p>{modal.from_date} to {modal.to_date} ({modal.days}d)</p></div>
             </div>
             <div className="modal-field" style={{marginTop:'.85rem'}}>
               <label>Reason</label>
@@ -338,5 +338,7 @@ export default function LecturerDashboard() {
     </div>
   )
 }
+
+
 
 

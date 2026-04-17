@@ -1,4 +1,4 @@
-import { AuthProvider, useAuth } from './context/AuthContext'
+﻿import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import StudentDashboard    from './pages/StudentDashboard'
 import LecturerDashboard   from './pages/LecturerDashboard'
@@ -30,3 +30,5 @@ export default function App() {
     </AuthProvider>
   )
 }
+
+

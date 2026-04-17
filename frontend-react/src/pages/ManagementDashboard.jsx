@@ -146,7 +146,7 @@ export default function ManagementDashboard() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-icon">—</div>Forwarded / Pending Leaves</div>
-                  <button className="btn btn-ghost btn-sm" onClick={()=>setPage('forwarded')}>View All -></button>
+                  <button className="btn btn-ghost btn-sm" onClick={()=>setPage('forwarded')}>View All</button>
                 </div>
                 <LeaveTable leaves={[...forwarded, ...lecLeaves.filter(l=>l.status==='Pending with Management')].slice(0,5)} showActions={true} />
               </div>
@@ -155,7 +155,7 @@ export default function ManagementDashboard() {
                 {assignments.slice(-6).reverse().map(a => (
                   <div key={a.id} className="qs-row">
                     <span className="qs-label" style={{fontSize:'.8rem'}}>{a.lecturer_name}</span>
-                    <span className="qs-val" style={{fontSize:'.75rem',color:'var(--text-3)'}}>{a.class_name} -> {a.subject_name}</span>
+                    <span className="qs-val" style={{fontSize:'.75rem',color:'var(--text-3)'}}>{a.class_name} to {a.subject_name}</span>
                   </div>
                 ))}
                 {!assignments.length && <div className="empty-state"><div className="empty-icon"></div><p>No assignments yet</p></div>}
@@ -272,7 +272,7 @@ export default function ManagementDashboard() {
                   </select>
                 </div>
               </div>
-              <button className="btn btn-primary" onClick={addAssignment}>Assign Lecturer -></button>
+              <button className="btn btn-primary" onClick={addAssignment}>Assign Lecturer</button>
             </div>
             <div className="card">
               <div className="card-title" style={{marginBottom:'1.25rem'}}><div className="card-icon">—</div>Current Assignments</div>
@@ -461,7 +461,7 @@ export default function ManagementDashboard() {
               <div className="modal-field"><label>Applicant</label><p>{modal.applicant_name}</p></div>
               <div className="modal-field"><label>Role</label><p style={{textTransform:'capitalize'}}>{modal.applicant_role}</p></div>
               <div className="modal-field"><label>Leave Type</label><p style={{textTransform:'capitalize'}}>{modal.leave_type}</p></div>
-              <div className="modal-field"><label>Duration</label><p>{modal.from_date} -> {modal.to_date} ({modal.days}d)</p></div>
+              <div className="modal-field"><label>Duration</label><p>{modal.from_date} to {modal.to_date} ({modal.days}d)</p></div>
             </div>
             <div className="modal-field" style={{marginTop:'.85rem'}}>
               <label>Reason</label>
@@ -482,5 +482,7 @@ export default function ManagementDashboard() {
     </div>
   )
 }
+
+
 
 

@@ -94,7 +94,7 @@ export default function StudentDashboard() {
           <div className="fade-in">
             <div className="topbar">
               <div className="topbar-left">
-                <h1>{`${new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}, ${(user?.student_name || user?.roll_no || 'Student').split(' ')[0]}`}
+                <h1>{`${new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}, ${(user?.student_name || user?.roll_no || 'Student').split(' ')[0]}`}</h1>
                 <p>Here's your leave status at a glance</p>
               </div>
               <div className="topbar-right">
@@ -131,7 +131,7 @@ export default function StudentDashboard() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-icon">—</div>Recent Applications</div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setPage('history')}>View All -></button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setPage('history')}>View All</button>
                 </div>
                 <div className="table-wrap">
                   <table><thead><tr><th>Type</th><th>Dates</th><th>Days</th><th>Status</th></tr></thead>
@@ -151,7 +151,7 @@ export default function StudentDashboard() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title"><div className="card-icon">—</div>Notifications</div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => { setPage('notifications'); markNotifsRead() }}>All -></button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setPage('notifications'); markNotifsRead() }}>All</button>
                 </div>
                 {notifs.slice(0, 4).map(n => (
                   <div key={n.id} className="notif-item">
@@ -214,7 +214,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
               <div style={{ display:'flex', gap:'.75rem', marginTop:'.75rem', flexWrap:'wrap' }}>
-                <button className="btn btn-primary" onClick={submitLeave}>Submit Application -></button>
+                <button className="btn btn-primary" onClick={submitLeave}>Submit Application</button>
                 <button className="btn btn-secondary" onClick={() => { setLeaveType(''); setReason(''); setFromDate(today); setToDate(today) }}>Clear Form</button>
               </div>
             </div>
@@ -345,5 +345,7 @@ export default function StudentDashboard() {
     </div>
   )
 }
+
+
 
 
