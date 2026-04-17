@@ -35,6 +35,7 @@ export default function ManagementDashboard() {
   const [newClass,   setNewClass]   = useState({ class_name:'', department:'', semester:'', section:'' })
   const [newSubject, setNewSubject] = useState({ subject_name:'', subject_code:'', department:'' })
   const [newAssign,  setNewAssign]  = useState({ lecturer_id:'', class_id:'', subject_id:'' })
+  const [newLecturer, setNewLecturer] = useState({ lecturer_name:'', email:'', password:'', department:'', lecturer_id:'' })
 
   const load = useCallback(async () => {
     const [s, c, sub, l, st, a, ll, fw, al, sr] = await Promise.all([
@@ -82,6 +83,18 @@ export default function ManagementDashboard() {
     }
     try { await api.assignLecturer(newAssign); await load(); setNewAssign({lecturer_id:'',class_id:'',subject_id:''}); showToast('Assigned ', 'Lecturer assigned.', 'success') }
     catch (e) { showToast('Error', e.message, 'error') }
+  }
+
+  const addLecturer = async () => {
+    if (!newLecturer.lecturer_name || !newLecturer.email || !newLecturer.password || !newLecturer.department) {
+      showToast('Missing', 'Name, email, password and department are required', 'warning'); return
+    }
+    try {
+      await api.lecturerRegister(newLecturer)
+      await load()
+      setNewLecturer({ lecturer_name:'', email:'', password:'', department:'', lecturer_id:'' })
+      showToast('Lecturer Added', `${newLecturer.lecturer_name} has been added successfully.`, 'success')
+    } catch (e) { showToast('Error', e.message, 'error') }
   }
 
   const statusBadge = s => `badge ${STATUS_BADGE[s] || 'badge-pending'}`
@@ -396,6 +409,58 @@ export default function ManagementDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── ADD LECTURER ── */}
+        {page === 'add-lecturer' && (
+          <div className="fade-in">
+            <div className="topbar">
+              <div className="topbar-left">
+                <h1>Add Lecturer</h1>
+                <p>Create a new lecturer account. They can then log in with these credentials.</p>
+              </div>
+            </div>
+            <div className="card" style={{ maxWidth: 600 }}>
+              <div className="form-group">
+                <label className="form-label">Full Name <span style={{color:'var(--rejected)'}}>*</span></label>
+                <input className="form-control" value={newLecturer.lecturer_name}
+                  onChange={e => setNewLecturer(l => ({...l, lecturer_name: e.target.value}))}
+                  placeholder="Dr. Full Name" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email Address <span style={{color:'var(--rejected)'}}>*</span></label>
+                <input className="form-control" type="email" value={newLecturer.email}
+                  onChange={e => setNewLecturer(l => ({...l, email: e.target.value}))}
+                  placeholder="lecturer@college.com" />
+              </div>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">Department <span style={{color:'var(--rejected)'}}>*</span></label>
+                  <input className="form-control" value={newLecturer.department}
+                    onChange={e => setNewLecturer(l => ({...l, department: e.target.value}))}
+                    placeholder="Computer Science" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Lecturer ID <span style={{color:'var(--text-3)', fontWeight:400}}>(optional)</span></label>
+                  <input className="form-control" value={newLecturer.lecturer_id}
+                    onChange={e => setNewLecturer(l => ({...l, lecturer_id: e.target.value}))}
+                    placeholder="FAC001" />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Password <span style={{color:'var(--rejected)'}}>*</span></label>
+                <input className="form-control" type="password" value={newLecturer.password}
+                  onChange={e => setNewLecturer(l => ({...l, password: e.target.value}))}
+                  placeholder="Set a password for this lecturer" />
+              </div>
+              <div style={{ fontSize:'.8rem', color:'#1e40af', padding:'.75rem 1rem',
+                background:'#dbeafe', border:'1px solid #3b82f6', borderRadius:8,
+                marginBottom:'1.25rem', lineHeight:1.6 }}>
+                The lecturer will use their email and this password to log in. You can assign them to classes and subjects from Lecturer Assignments.
+              </div>
+              <button className="btn btn-primary" onClick={addLecturer}>Add Lecturer</button>
             </div>
           </div>
         )}

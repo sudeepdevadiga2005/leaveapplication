@@ -22,6 +22,7 @@ const NAV = {
     { id:'student-report',  label:'Student Leave Report' },
     { id:'assignments',     label:'Lecturer Assignments' },
     { id:'classes',         label:'Classes & Subjects' },
+    { id:'add-lecturer',    label:'Add Lecturer' },
     { id:'lecturer-leaves', label:'Lecturer Leaves', badge:true },
     { id:'forwarded',       label:'Forwarded Leaves' },
     { id:'all-leaves',      label:'All Leaves' },

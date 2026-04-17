@@ -129,22 +129,17 @@ export default function Login() {
         if (role === 'management') res = await api.managementLogin({ email: form.email, password: form.password })
         setUser(res.user)
       } else {
+        // Only students can self-register
         if (role === 'student') {
           await api.studentRegister({
             roll_no: form.roll_no, email: form.email, password: form.password,
             student_name: form.student_name, department: form.department,
             class_name: form.class_name, semester: form.semester,
           })
-        } else {
-          await api.lecturerRegister({
-            lecturer_name: form.lecturer_name, email: form.email,
-            password: form.password, department: form.department,
-            lecturer_id: form.lecturer_id,
-          })
+          setForm({})
+          setMode('login')
+          setSuccess('Registration successful! You can now sign in.')
         }
-        setForm({})
-        setMode('login')
-        setSuccess('Registration successful! You can now sign in.')
       }
     } catch (e) {
       setError(e.message || 'Something went wrong. Please try again.')
@@ -187,8 +182,8 @@ export default function Login() {
             ))}
           </div>
 
-          {/* Login / Register toggle */}
-          {role !== 'management' && (
+          {/* Login / Register toggle — only for students */}
+          {role === 'student' && (
             <div style={S.modeTabs}>
               {['login', 'register'].map(m => (
                 <button key={m} onClick={() => switchMode(m)} style={S.modeBtn(mode === m, activeColor)}>
@@ -277,37 +272,15 @@ export default function Login() {
             </>
           )}
 
-          {/* ── LECTURER REGISTER ── */}
-          {mode === 'register' && role === 'lecturer' && (
-            <>
-              <div className="form-group">
-                <label className="form-label">Full Name <span style={{color:'var(--rejected)'}}>*</span></label>
-                <input className="form-control" value={form.lecturer_name || ''} onChange={e => set('lecturer_name', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Email Address <span style={{color:'var(--rejected)'}}>*</span></label>
-                <input className="form-control" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} />
-              </div>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Department <span style={{color:'var(--rejected)'}}>*</span></label>
-                  <input className="form-control" value={form.department || ''} onChange={e => set('department', e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Lecturer ID <span style={{color:'var(--text-3)',fontWeight:400}}>(optional)</span></label>
-                  <input className="form-control" value={form.lecturer_id || ''} onChange={e => set('lecturer_id', e.target.value)} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Password <span style={{color:'var(--rejected)'}}>*</span></label>
-                <input className="form-control" type="password" value={form.password || ''} onChange={e => set('password', e.target.value)} />
-              </div>
-              <div style={{ fontSize:'.78rem', color:'var(--text-3)', padding:'.65rem .875rem',
-                background:'rgba(96,165,250,.07)', border:'1px solid rgba(96,165,250,.18)',
-                borderRadius:8, marginBottom:'.5rem', lineHeight:1.5 }}>
-                Note: Class and subject assignment is handled by Management after registration.
-              </div>
-            </>
+          {/* ── LECTURER REGISTER — removed, admin adds lecturers ── */}
+
+          {/* ── LECTURER LOGIN NOTE ── */}
+          {mode === 'login' && role === 'lecturer' && (
+            <div style={{ fontSize:'.78rem', color:'#1e40af', padding:'.65rem .875rem',
+              background:'#dbeafe', border:'1px solid #3b82f6',
+              borderRadius:8, marginBottom:'1rem', lineHeight:1.5 }}>
+              Lecturer accounts are created by Management. Contact your administrator if you do not have an account.
+            </div>
           )}
 
           {/* Submit button */}
