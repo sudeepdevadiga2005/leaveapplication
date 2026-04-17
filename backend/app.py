@@ -3,6 +3,7 @@ import traceback
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_session import Session
 from mail_service import mail
 from routes.auth   import auth_bp
 from routes.leaves import leaves_bp
@@ -16,6 +17,12 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY']              = os.getenv('SECRET_KEY', 'absentalert-secret-2024')
+
+    # Server-side filesystem session — fixes cookie issues through Vite proxy
+    app.config['SESSION_TYPE']            = 'filesystem'
+    app.config['SESSION_FILE_DIR']        = os.path.join(os.path.dirname(__file__), 'flask_sessions')
+    app.config['SESSION_PERMANENT']       = False
+    app.config['SESSION_USE_SIGNER']      = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_SECURE']   = False
     app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -47,6 +54,7 @@ def create_app():
          resources={r'/api/*': {'origins': ['http://localhost:3000', 'http://127.0.0.1:3000']}},
          supports_credentials=True)
 
+    Session(app)
     mail.init_app(app)
 
     app.register_blueprint(auth_bp,   url_prefix='/api')
