@@ -1,0 +1,13 @@
+{
+  "name": "absentalert",
+  "version": "1.0.0",
+  "description": "Run frontend and backend together",
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && py app.py",
+    "frontend": "cd frontend-react && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

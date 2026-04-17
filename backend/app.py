@@ -3,7 +3,6 @@ import traceback
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
-from extensions import db
 from mail_service import mail
 from routes.auth   import auth_bp
 from routes.leaves import leaves_bp
@@ -12,9 +11,10 @@ from routes.notifications import notifs_bp
 
 load_dotenv()
 
-# ── Admin seeding (separate so it can be called after reset) ──
+
 def _seed_admin(app):
     with app.app_context():
+        from extensions import get_db
         from models import Management
         from werkzeug.security import generate_password_hash
         admin_email = os.getenv('ADMIN_EMAIL')
@@ -22,30 +22,23 @@ def _seed_admin(app):
         if not admin_email or not admin_pass:
             print("[AUTH] ADMIN_EMAIL / ADMIN_PASSWORD not set in .env — skipping admin creation")
             return
-        existing = Management.query.filter_by(email=admin_email).first()
+        mgmt = Management(get_db())
+        existing = mgmt.find_by_email(admin_email)
         if not existing:
-            print(f"[AUTH] Auto-creating admin: {admin_email}")
-            db.session.add(Management(
-                email=admin_email,
-                password=generate_password_hash(admin_pass),
-                role='admin'
-            ))
-            db.session.commit()
+            mgmt.create({'email': admin_email, 'password': generate_password_hash(admin_pass), 'role': 'admin'})
             print(f"[AUTH] Admin created: {admin_email}")
         else:
             print(f"[AUTH] Admin already exists: {admin_email}")
 
+
 def create_app():
     app = Flask(__name__)
 
-    # ── Core config ───────────────────────────────────────────
-    app.config['SECRET_KEY']                     = os.getenv('SECRET_KEY', 'absentalert-secret-2024')
-    app.config['SQLALCHEMY_DATABASE_URI']        = 'sqlite:///absentalert.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SESSION_COOKIE_SAMESITE']        = 'Lax'
-    app.config['SESSION_COOKIE_SECURE']          = False
+    app.config['SECRET_KEY']             = os.getenv('SECRET_KEY', 'absentalert-secret-2024')
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE']   = False
 
-    # ── Flask-Mail config ─────────────────────────────────────
+    # Flask-Mail
     app.config['MAIL_SERVER']         = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT']           = int(os.getenv('MAIL_PORT', 587))
     app.config['MAIL_USE_SSL']        = (app.config['MAIL_PORT'] == 465)
@@ -68,7 +61,6 @@ def create_app():
         print("[MAIL] Email disabled — set MAIL_USERNAME / MAIL_PASSWORD in .env to enable")
 
     CORS(app, resources={r'/api/*': {'origins': '*'}}, supports_credentials=True)
-    db.init_app(app)
     mail.init_app(app)
 
     app.register_blueprint(auth_bp,   url_prefix='/api')
@@ -76,8 +68,6 @@ def create_app():
     app.register_blueprint(admin_bp,  url_prefix='/api/admin')
     app.register_blueprint(notifs_bp, url_prefix='/api/notifications')
 
-    # ── Global JSON error handlers ────────────────────────────
-    # These ensure Flask NEVER returns an HTML error page or empty body.
     @app.errorhandler(400)
     def bad_request(e):
         return jsonify({'status': 'error', 'message': 'Bad request'}), 400
@@ -100,29 +90,21 @@ def create_app():
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # Catches any unhandled 500-level error and always returns JSON
         print(f"[ERROR] Unhandled exception:\n{traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': 'Internal server error — check backend logs'}), 500
 
-    # ── DB init with schema-mismatch auto-recovery ────────────
+    # Verify MongoDB connection on startup
     with app.app_context():
         try:
-            db.create_all()
-            print("[DB] Tables created / verified OK.")
+            from extensions import get_db
+            get_db().command('ping')
+            print("[DB] MongoDB connected successfully.")
             _seed_admin(app)
         except Exception as e:
-            # Existing DB has a stale schema (missing columns, etc.)
-            print(f"[DB] Schema mismatch: {e}")
-            print("[DB] Dropping and recreating all tables...")
-            try:
-                db.drop_all()
-                db.create_all()
-                print("[DB] Tables recreated successfully.")
-                _seed_admin(app)
-            except Exception as e2:
-                print(f"[DB] CRITICAL — could not initialize DB: {e2}\n{traceback.format_exc()}")
+            print(f"[DB] MongoDB connection failed: {e}\n{traceback.format_exc()}")
 
     return app
+
 
 if __name__ == '__main__':
     app = create_app()

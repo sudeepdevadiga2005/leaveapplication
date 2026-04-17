@@ -1,177 +1,332 @@
-from extensions import db
+from bson import ObjectId
 from datetime import datetime
 
-class Student(db.Model):
-    __tablename__ = 'students'
-    id           = db.Column(db.Integer, primary_key=True)
-    roll_no      = db.Column(db.String(30), unique=True, nullable=False)
-    email        = db.Column(db.String(120), unique=True, nullable=False)
-    password     = db.Column(db.String(200), nullable=False)
-    student_name = db.Column(db.String(100))
-    department   = db.Column(db.String(100), nullable=False)
-    class_name   = db.Column(db.String(50), nullable=False)
-    semester     = db.Column(db.String(20))
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def to_dict(self):
-        return dict(id=self.id, roll_no=self.roll_no, email=self.email,
-                    student_name=self.student_name, department=self.department,
-                    class_name=self.class_name, semester=self.semester,
-                    created_at=str(self.created_at))
+def _str_id(doc):
+    """Convert MongoDB _id to string id."""
+    if doc and '_id' in doc:
+        doc['id'] = str(doc.pop('_id'))
+    return doc
 
 
-class Lecturer(db.Model):
-    __tablename__ = 'lecturers'
-    id            = db.Column(db.Integer, primary_key=True)
-    lecturer_name = db.Column(db.String(100), nullable=False)
-    email         = db.Column(db.String(120), unique=True, nullable=False)
-    password      = db.Column(db.String(200), nullable=False)
-    lecturer_id   = db.Column(db.String(30))
-    department    = db.Column(db.String(100), nullable=False)
-    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+# ── Students ──────────────────────────────────────────────────
+class Student:
+    def __init__(self, db):
+        self.col = db['students']
 
-    def to_dict(self):
-        return dict(id=self.id, lecturer_name=self.lecturer_name, email=self.email,
-                    lecturer_id=self.lecturer_id, department=self.department,
-                    created_at=str(self.created_at))
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
 
+    def find_by_id(self, uid):
+        doc = self.col.find_one({'_id': ObjectId(uid)})
+        return _str_id(doc)
 
-class Management(db.Model):
-    __tablename__ = 'management'
-    id         = db.Column(db.Integer, primary_key=True)
-    email      = db.Column(db.String(120), unique=True, nullable=False)
-    password   = db.Column(db.String(200), nullable=False)
-    role       = db.Column(db.String(10), default='admin')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    def find_by_roll(self, roll_no):
+        doc = self.col.find_one({'roll_no': roll_no})
+        return _str_id(doc)
 
-    def to_dict(self):
-        return dict(id=self.id, email=self.email, role=self.role)
+    def find_by_email(self, email):
+        doc = self.col.find_one({'email': email})
+        return _str_id(doc)
 
+    def find_by_class(self, class_name):
+        return [_str_id(d) for d in self.col.find({'class_name': class_name})]
 
-class Class(db.Model):
-    __tablename__ = 'classes'
-    id         = db.Column(db.Integer, primary_key=True)
-    class_name = db.Column(db.String(50), nullable=False)
-    department = db.Column(db.String(100))
-    semester   = db.Column(db.String(20))
-    section    = db.Column(db.String(10))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
 
-    def to_dict(self):
-        return dict(id=self.id, class_name=self.class_name, department=self.department,
-                    semester=self.semester, section=self.section)
+    def count(self):
+        return self.col.count_documents({})
 
-
-class Subject(db.Model):
-    __tablename__ = 'subjects'
-    id           = db.Column(db.Integer, primary_key=True)
-    subject_name = db.Column(db.String(100), nullable=False)
-    subject_code = db.Column(db.String(20))
-    department   = db.Column(db.String(100))
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def to_dict(self):
-        return dict(id=self.id, subject_name=self.subject_name,
-                    subject_code=self.subject_code, department=self.department)
-
-
-class LecturerAssignment(db.Model):
-    __tablename__ = 'lecturer_assignments'
-    id               = db.Column(db.Integer, primary_key=True)
-    lecturer_id      = db.Column(db.Integer, db.ForeignKey('lecturers.id'), nullable=False)
-    class_id         = db.Column(db.Integer, db.ForeignKey('classes.id'), nullable=False)
-    subject_id       = db.Column(db.Integer, db.ForeignKey('subjects.id'), nullable=True)
-    is_mentor        = db.Column(db.Boolean, default=False)   # class in-charge / mentor
-    department       = db.Column(db.String(100))
-    assigned_by_admin= db.Column(db.Integer, db.ForeignKey('management.id'))
-    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
-
-    lecturer = db.relationship('Lecturer', backref='assignments')
-    cls      = db.relationship('Class',    backref='assignments')
-    subject  = db.relationship('Subject',  backref='assignments')
-
-    def to_dict(self):
-        return dict(
-            id=self.id,
-            lecturer_id=self.lecturer_id,
-            lecturer_name=self.lecturer.lecturer_name if self.lecturer else '',
-            class_id=self.class_id,
-            class_name=self.cls.class_name if self.cls else '',
-            subject_id=self.subject_id,
-            subject_name=self.subject.subject_name if self.subject else '—',
-            is_mentor=self.is_mentor,
-            department=self.department,
-        )
-
-
-# Leave statuses
-LEAVE_STATUSES = [
-    'Pending with Lecturer',
-    'Rejected by Lecturer',
-    'Approved by Lecturer and Forwarded to Admin',
-    'Pending with Admin',
-    'Approved by Admin',
-    'Rejected by Admin',
-]
-
-class Leave(db.Model):
-    __tablename__ = 'leaves'
-    id             = db.Column(db.Integer, primary_key=True)
-    applicant_id   = db.Column(db.Integer, nullable=False)
-    applicant_role = db.Column(db.String(15), nullable=False)   # student | lecturer
-    applicant_name = db.Column(db.String(100))
-    email          = db.Column(db.String(120))
-    department     = db.Column(db.String(100))
-    class_name     = db.Column(db.String(50))
-    leave_type     = db.Column(db.String(30), nullable=False)
-    reason         = db.Column(db.Text, nullable=False)
-    from_date      = db.Column(db.String(12), nullable=False)
-    to_date        = db.Column(db.String(12), nullable=False)
-    days           = db.Column(db.Integer, default=1)
-    status         = db.Column(db.String(40), default='Pending with Lecturer')
-    handled_by     = db.Column(db.Integer)
-    forwarded_to   = db.Column(db.String(20))
-    remarks        = db.Column(db.String(300), default='')
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def to_dict(self):
-        return dict(
-            id=self.id, applicant_id=self.applicant_id,
-            applicant_role=self.applicant_role, applicant_name=self.applicant_name,
-            email=self.email, department=self.department, class_name=self.class_name,
-            leave_type=self.leave_type, reason=self.reason,
-            from_date=self.from_date, to_date=self.to_date, days=self.days,
-            status=self.status, handled_by=self.handled_by,
-            forwarded_to=self.forwarded_to, remarks=self.remarks,
-            created_at=str(self.created_at), updated_at=str(self.updated_at),
-        )
-
-class Notification(db.Model):
-    __tablename__ = 'notifications'
-    id         = db.Column(db.Integer, primary_key=True)
-    user_id    = db.Column(db.Integer, nullable=False)
-    role       = db.Column(db.String(20))
-    message    = db.Column(db.String(500), nullable=False)
-    is_read    = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def to_dict(self):
-        t = 'pending'
-        if 'Approve' in self.message or 'approve' in self.message:
-            t = 'approved'
-        elif 'Reject' in self.message or 'reject' in self.message:
-            t = 'rejected'
-
+    def to_dict(self, doc):
         return {
-            'id': self.id,
-            'user_id': self.user_id,
-            'role': self.role,
-            'message': self.message,
-            'msg': self.message,
-            'is_read': self.is_read,
-            'read': self.is_read,
-            'created_at': self.created_at.isoformat(),
-            'time': self.created_at.strftime('%Y-%m-%d %H:%M'),
-            'type': t
+            'id':           doc.get('id'),
+            'roll_no':      doc.get('roll_no'),
+            'email':        doc.get('email'),
+            'student_name': doc.get('student_name'),
+            'department':   doc.get('department'),
+            'class_name':   doc.get('class_name'),
+            'semester':     doc.get('semester'),
+            'created_at':   str(doc.get('created_at', '')),
+        }
+
+
+# ── Lecturers ─────────────────────────────────────────────────
+class Lecturer:
+    def __init__(self, db):
+        self.col = db['lecturers']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
+
+    def find_by_id(self, uid):
+        doc = self.col.find_one({'_id': ObjectId(uid)})
+        return _str_id(doc)
+
+    def find_by_email(self, email):
+        doc = self.col.find_one({'email': email})
+        return _str_id(doc)
+
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
+
+    def count(self):
+        return self.col.count_documents({})
+
+    def to_dict(self, doc):
+        return {
+            'id':            doc.get('id'),
+            'lecturer_name': doc.get('lecturer_name'),
+            'email':         doc.get('email'),
+            'lecturer_id':   doc.get('lecturer_id'),
+            'department':    doc.get('department'),
+            'created_at':    str(doc.get('created_at', '')),
+        }
+
+
+# ── Management (Admin) ────────────────────────────────────────
+class Management:
+    def __init__(self, db):
+        self.col = db['management']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
+
+    def find_by_id(self, uid):
+        doc = self.col.find_one({'_id': ObjectId(uid)})
+        return _str_id(doc)
+
+    def find_by_email(self, email):
+        doc = self.col.find_one({'email': email})
+        return _str_id(doc)
+
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
+
+    def to_dict(self, doc):
+        return {
+            'id':    doc.get('id'),
+            'email': doc.get('email'),
+            'role':  doc.get('role', 'admin'),
+        }
+
+
+# ── Classes ───────────────────────────────────────────────────
+class Class:
+    def __init__(self, db):
+        self.col = db['classes']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
+
+    def find_by_id(self, cid):
+        doc = self.col.find_one({'_id': ObjectId(cid)})
+        return _str_id(doc)
+
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
+
+    def to_dict(self, doc):
+        return {
+            'id':         doc.get('id'),
+            'class_name': doc.get('class_name'),
+            'department': doc.get('department'),
+            'semester':   doc.get('semester'),
+            'section':    doc.get('section'),
+        }
+
+
+# ── Subjects ──────────────────────────────────────────────────
+class Subject:
+    def __init__(self, db):
+        self.col = db['subjects']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
+
+    def find_by_id(self, sid):
+        doc = self.col.find_one({'_id': ObjectId(sid)})
+        return _str_id(doc)
+
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
+
+    def to_dict(self, doc):
+        return {
+            'id':           doc.get('id'),
+            'subject_name': doc.get('subject_name'),
+            'subject_code': doc.get('subject_code'),
+            'department':   doc.get('department'),
+        }
+
+
+# ── Lecturer Assignments ──────────────────────────────────────
+class LecturerAssignment:
+    def __init__(self, db):
+        self.col = db['lecturer_assignments']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
+
+    def find_by_id(self, aid):
+        doc = self.col.find_one({'_id': ObjectId(aid)})
+        return _str_id(doc)
+
+    def find_by_lecturer(self, lecturer_id):
+        return [_str_id(d) for d in self.col.find({'lecturer_id': lecturer_id})]
+
+    def find_by_class(self, class_id):
+        return [_str_id(d) for d in self.col.find({'class_id': class_id})]
+
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
+
+    def delete_by_class(self, class_id):
+        self.col.delete_many({'class_id': class_id})
+
+    def delete_by_id(self, aid):
+        self.col.delete_one({'_id': ObjectId(aid)})
+
+    def update_by_id(self, aid, data):
+        self.col.update_one({'_id': ObjectId(aid)}, {'$set': data})
+
+    def clear_mentor(self, class_id):
+        self.col.update_many({'class_id': class_id, 'is_mentor': True}, {'$set': {'is_mentor': False}})
+
+    def to_dict(self, doc, lecturer=None, cls=None, subject=None):
+        return {
+            'id':            doc.get('id'),
+            'lecturer_id':   doc.get('lecturer_id'),
+            'lecturer_name': lecturer.get('lecturer_name', '') if lecturer else '',
+            'class_id':      doc.get('class_id'),
+            'class_name':    cls.get('class_name', '') if cls else '',
+            'subject_id':    doc.get('subject_id'),
+            'subject_name':  subject.get('subject_name', '—') if subject else '—',
+            'is_mentor':     doc.get('is_mentor', False),
+            'department':    doc.get('department', ''),
+        }
+
+
+# ── Leaves ────────────────────────────────────────────────────
+class Leave:
+    def __init__(self, db):
+        self.col = db['leaves']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        data['updated_at'] = datetime.utcnow()
+        result = self.col.insert_one(data)
+        return str(result.inserted_id)
+
+    def find_by_id(self, lid):
+        doc = self.col.find_one({'_id': ObjectId(lid)})
+        return _str_id(doc)
+
+    def find_by_applicant(self, applicant_id, role):
+        return [_str_id(d) for d in self.col.find(
+            {'applicant_id': applicant_id, 'applicant_role': role},
+            sort=[('_id', -1)]
+        )]
+
+    def find_by_class_names(self, class_names):
+        return [_str_id(d) for d in self.col.find(
+            {'applicant_role': 'student', 'class_name': {'$in': class_names}},
+            sort=[('_id', -1)]
+        )]
+
+    def find_by_role(self, role):
+        return [_str_id(d) for d in self.col.find({'applicant_role': role}, sort=[('_id', -1)])]
+
+    def find_admin_student_leaves(self):
+        statuses = [
+            'Approved by Lecturer and Forwarded to Admin',
+            'Pending with Admin',
+            'Approved by Admin',
+            'Rejected by Admin',
+        ]
+        return [_str_id(d) for d in self.col.find(
+            {'applicant_role': 'student', 'status': {'$in': statuses}},
+            sort=[('_id', -1)]
+        )]
+
+    def all(self):
+        return [_str_id(d) for d in self.col.find()]
+
+    def update(self, lid, data):
+        data['updated_at'] = datetime.utcnow()
+        self.col.update_one({'_id': ObjectId(lid)}, {'$set': data})
+
+    def count(self):
+        return self.col.count_documents({})
+
+    def to_dict(self, doc):
+        return {
+            'id':             doc.get('id'),
+            'applicant_id':   doc.get('applicant_id'),
+            'applicant_role': doc.get('applicant_role'),
+            'applicant_name': doc.get('applicant_name'),
+            'email':          doc.get('email'),
+            'department':     doc.get('department'),
+            'class_name':     doc.get('class_name'),
+            'leave_type':     doc.get('leave_type'),
+            'reason':         doc.get('reason'),
+            'from_date':      doc.get('from_date'),
+            'to_date':        doc.get('to_date'),
+            'days':           doc.get('days', 1),
+            'status':         doc.get('status'),
+            'handled_by':     doc.get('handled_by'),
+            'forwarded_to':   doc.get('forwarded_to'),
+            'remarks':        doc.get('remarks', ''),
+            'created_at':     str(doc.get('created_at', '')),
+            'updated_at':     str(doc.get('updated_at', '')),
+        }
+
+
+# ── Notifications ─────────────────────────────────────────────
+class Notification:
+    def __init__(self, db):
+        self.col = db['notifications']
+
+    def create(self, data):
+        data['created_at'] = datetime.utcnow()
+        data.setdefault('is_read', False)
+        self.col.insert_one(data)
+
+    def find_by_user(self, user_id):
+        return [_str_id(d) for d in self.col.find({'user_id': user_id}, sort=[('_id', -1)])]
+
+    def mark_all_read(self, user_id):
+        self.col.update_many({'user_id': user_id, 'is_read': False}, {'$set': {'is_read': True}})
+
+    def to_dict(self, doc):
+        msg = doc.get('message', '')
+        t = 'pending'
+        if 'Approve' in msg or 'approve' in msg:
+            t = 'approved'
+        elif 'Reject' in msg or 'reject' in msg:
+            t = 'rejected'
+        created = doc.get('created_at', datetime.utcnow())
+        return {
+            'id':         doc.get('id'),
+            'user_id':    doc.get('user_id'),
+            'role':       doc.get('role'),
+            'message':    msg,
+            'msg':        msg,
+            'is_read':    doc.get('is_read', False),
+            'read':       doc.get('is_read', False),
+            'created_at': created.isoformat() if hasattr(created, 'isoformat') else str(created),
+            'time':       created.strftime('%Y-%m-%d %H:%M') if hasattr(created, 'strftime') else str(created),
+            'type':       t,
         }
