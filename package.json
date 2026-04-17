@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Run frontend and backend together",
   "scripts": {
-    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "backend": "cd backend && py app.py",
-    "frontend": "cd frontend-react && npm run dev"
+    "start": "concurrently --kill-others-on-fail \"npm run backend\" \"npm run frontend\"",
+    "backend": "py backend/app.py",
+    "frontend": "npm run dev --prefix frontend-react"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

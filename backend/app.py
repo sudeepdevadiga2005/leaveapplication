@@ -1,5 +1,11 @@
 import os
+import sys
 import traceback
+
+# Ensure backend directory is in path when run from parent folder
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
