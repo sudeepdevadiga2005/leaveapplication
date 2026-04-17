@@ -1,5 +1,6 @@
 from bson import ObjectId
 from datetime import datetime
+from pymongo import ASCENDING
 
 
 def _str_id(doc):
@@ -7,6 +8,14 @@ def _str_id(doc):
     if doc and '_id' in doc:
         doc['id'] = str(doc.pop('_id'))
     return doc
+
+
+def _ensure_indexes(db):
+    """Create unique indexes for all collections."""
+    db['students'].create_index([('email', ASCENDING)], unique=True)
+    db['students'].create_index([('roll_no', ASCENDING)], unique=True)
+    db['lecturers'].create_index([('email', ASCENDING)], unique=True)
+    db['management'].create_index([('email', ASCENDING)], unique=True)
 
 
 # ── Students ──────────────────────────────────────────────────

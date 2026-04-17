@@ -97,8 +97,11 @@ def create_app():
     with app.app_context():
         try:
             from extensions import get_db
-            get_db().command('ping')
-            print("[DB] MongoDB connected successfully.")
+            from models import _ensure_indexes
+            db = get_db()
+            db.command('ping')
+            _ensure_indexes(db)
+            print("[DB] MongoDB connected and indexes ensured.")
         except Exception as e:
             print(f"[DB] MongoDB connection failed: {e}\n{traceback.format_exc()}")
 

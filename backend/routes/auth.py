@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, session
 from extensions import get_db
 from models import Student, Lecturer, Management
 from werkzeug.security import check_password_hash, generate_password_hash
+from pymongo.errors import DuplicateKeyError
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -28,15 +29,19 @@ def student_register():
         if students.find_by_email(d['email']):
             return jsonify({'status': 'error', 'message': 'Email already registered'}), 409
 
-        students.create({
-            'roll_no':      d['roll_no'],
-            'email':        d['email'],
-            'password':     generate_password_hash(d['password']),
-            'student_name': d.get('student_name', ''),
-            'department':   d['department'],
-            'class_name':   d['class_name'],
-            'semester':     d.get('semester', ''),
-        })
+        try:
+            students.create({
+                'roll_no':      d['roll_no'],
+                'email':        d['email'],
+                'password':     generate_password_hash(d['password']),
+                'student_name': d.get('student_name', ''),
+                'department':   d['department'],
+                'class_name':   d['class_name'],
+                'semester':     d.get('semester', ''),
+            })
+        except DuplicateKeyError as e:
+            key = 'Email' if 'email' in str(e) else 'Roll number'
+            return jsonify({'status': 'error', 'message': f'{key} already registered'}), 409
         return jsonify({'status': 'success', 'message': 'Student registered successfully'}), 201
     except Exception:
         print(f"[ERROR] student_register:\n{traceback.format_exc()}")
@@ -88,13 +93,16 @@ def lecturer_register():
         if lecturers.find_by_email(d['email']):
             return jsonify({'status': 'error', 'message': 'Email already registered'}), 409
 
-        lecturers.create({
-            'lecturer_name': d['lecturer_name'],
-            'email':         d['email'],
-            'password':      generate_password_hash(d['password']),
-            'lecturer_id':   d.get('lecturer_id', ''),
-            'department':    d['department'],
-        })
+        try:
+            lecturers.create({
+                'lecturer_name': d['lecturer_name'],
+                'email':         d['email'],
+                'password':      generate_password_hash(d['password']),
+                'lecturer_id':   d.get('lecturer_id', ''),
+                'department':    d['department'],
+            })
+        except DuplicateKeyError:
+            return jsonify({'status': 'error', 'message': 'Email already registered'}), 409
         return jsonify({'status': 'success', 'message': 'Lecturer registered successfully'}), 201
     except Exception:
         print(f"[ERROR] lecturer_register:\n{traceback.format_exc()}")
