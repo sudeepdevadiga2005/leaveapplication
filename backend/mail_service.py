@@ -5,8 +5,17 @@ Sends emails on leave events using Flask-Mail + Gmail SMTP.
 
 from flask_mail import Mail, Message
 from flask import current_app
+import threading
 
 mail = Mail()
+
+def _send_async(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+            print(f"[MAIL] Sent to {msg.recipients}: {msg.subject}")
+        except Exception as e:
+            print(f"[MAIL ERROR] Failed to send '{msg.subject}' to {msg.recipients}: {e}")
 
 def _send(subject, recipients, body):
     """
@@ -18,17 +27,15 @@ def _send(subject, recipients, body):
         print(f"[MAIL SKIPPED] Email not configured. Would have sent: {subject}")
         return
 
-    try:
-        msg = Message(
-            subject=subject,
-            sender=current_app.config.get('MAIL_USERNAME', 'noreply@absentalert.com'),
-            recipients=recipients if isinstance(recipients, list) else [recipients],
-        )
-        msg.body = body
-        mail.send(msg)
-        print(f"[MAIL] Sent to {recipients}: {subject}")
-    except Exception as e:
-        print(f"[MAIL ERROR] Failed to send '{subject}' to {recipients}: {e}")
+    msg = Message(
+        subject=subject,
+        sender=current_app.config.get('MAIL_USERNAME', 'noreply@absentalert.com'),
+        recipients=recipients if isinstance(recipients, list) else [recipients],
+    )
+    msg.body = body
+    
+    app = current_app._get_current_object()
+    threading.Thread(target=_send_async, args=(app, msg)).start()
 
 # 1. Student submits leave -> Notify Lecturer
 def notify_student_leave_submitted_to_lecturer(lecturer_name, lecturer_email, student_name, leave_type, from_date, to_date, reason):

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, session, current_app
-from models import Leave, Student, Lecturer, LecturerAssignment, Class, Management
+from models import Leave, Student, Lecturer, LecturerAssignment, Class, Management, Notification
 from extensions import db
 from mail_service import (
     notify_student_leave_submitted_to_lecturer,
@@ -57,6 +57,7 @@ def apply_leave():
         for a in assignments:
             lec = Lecturer.query.get(a.lecturer_id)
             if lec:
+                db.session.add(Notification(user_id=lec.id, role='lecturer', message=f"New leave request from {student.student_name}"))
                 notify_student_leave_submitted_to_lecturer(
                     lecturer_name=lec.lecturer_name,
                     lecturer_email=lec.email,
@@ -66,6 +67,7 @@ def apply_leave():
                     to_date=leave.to_date,
                     reason=leave.reason
                 )
+        db.session.commit()
 
     elif role == 'lecturer':
         lec = Lecturer.query.get(uid)
@@ -81,6 +83,11 @@ def apply_leave():
         db.session.commit()
         
         # Notify Admin
+        admins = Management.query.all()
+        for admin in admins:
+            db.session.add(Notification(user_id=admin.id, role='management', message=f"New leave request from Lecturer {lec.lecturer_name}"))
+        db.session.commit()
+
         admin_emails = get_admin_emails()
         for email in admin_emails:
             notify_lecturer_leave_submitted_to_admin(
@@ -169,6 +176,10 @@ def approve(lid):
         leave.handled_by = uid
         leave.remarks    = remarks
         leave.updated_at = datetime.utcnow()
+        db.session.add(Notification(user_id=leave.applicant_id, role='student', message=f"Your leave request has been approved by Lecturer."))
+        admins = Management.query.all()
+        for admin in admins:
+            db.session.add(Notification(user_id=admin.id, role='management', message=f"Leave request from {leave.applicant_name} forwarded by Lecturer."))
         db.session.commit()
 
         # Notify Student
@@ -199,6 +210,7 @@ def approve(lid):
         leave.handled_by = uid
         leave.remarks    = remarks
         leave.updated_at = datetime.utcnow()
+        db.session.add(Notification(user_id=leave.applicant_id, role=leave.applicant_role, message=f"Your leave request has been Approved by Admin."))
         db.session.commit()
 
         if leave.applicant_role == 'student':
@@ -243,6 +255,7 @@ def reject(lid):
         leave.handled_by = uid
         leave.remarks    = remarks
         leave.updated_at = datetime.utcnow()
+        db.session.add(Notification(user_id=leave.applicant_id, role='student', message=f"Your leave request has been Rejected by Lecturer."))
         db.session.commit()
 
         notify_student_leave_rejected_by_lecturer(
@@ -262,6 +275,7 @@ def reject(lid):
         leave.handled_by = uid
         leave.remarks    = remarks
         leave.updated_at = datetime.utcnow()
+        db.session.add(Notification(user_id=leave.applicant_id, role=leave.applicant_role, message=f"Your leave request has been Rejected by Admin."))
         db.session.commit()
 
         if leave.applicant_role == 'student':

@@ -1,5 +1,5 @@
 # AbsentAlert - PowerShell Launcher
-# This script initializes the environment and launches backend/frontend servers.
+# Initializes environment and launches backend + frontend servers.
 
 $Host.UI.RawUI.WindowTitle = "AbsentAlert Launcher"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -20,16 +20,15 @@ function Test-CommandAvailable($cmd) {
 
 Show-Header
 
-# Check environment
+# ── [1/4] Verify environment ──────────────────────────────────
 Write-Host "  [1/4] Verifying environment..." -ForegroundColor Yellow
 
 $pyCmd = "python"
 if (-not (Test-CommandAvailable "python")) {
     if (Test-CommandAvailable "py") {
         $pyCmd = "py"
-    }
-    else {
-        Write-Host "  [ERROR] Python/Py not found. Please install Python 3.x" -ForegroundColor Red
+    } else {
+        Write-Host "  [ERROR] Python not found. Please install Python 3.x" -ForegroundColor Red
         Read-Host "  Press Enter to exit"
         exit 1
     }
@@ -41,46 +40,61 @@ if (-not (Test-CommandAvailable "node")) {
     exit 1
 }
 
-Write-Host "  [OK] Python and Node.js detected." -ForegroundColor Green
+Write-Host "  [OK] Python ($($pyCmd)) and Node.js detected." -ForegroundColor Green
 
-# Dependencies
-Write-Host "  [2/4] Syncing dependencies and database..." -ForegroundColor Yellow
+# ── [2/4] Install dependencies ────────────────────────────────
+Write-Host "  [2/4] Syncing dependencies..." -ForegroundColor Yellow
 
 Set-Location "$root\backend"
-& $pyCmd -m pip install -r requirements.txt --quiet
+
+# Install Python packages
+& $pyCmd -m pip install -r requirements.txt --quiet 2>$null
 if ($LASTEXITCODE -ne 0) {
-    & $pyCmd -m pip install flask flask-cors flask-sqlalchemy flask-mail werkzeug --quiet
+    Write-Host "  [WARN] requirements.txt install failed, trying manual install..." -ForegroundColor DarkYellow
+    & $pyCmd -m pip install flask flask-cors flask-sqlalchemy flask-mail werkzeug python-dotenv --quiet
 }
 
-# Seed
-& $pyCmd seed.py
+# Run seed.py safely — errors here should NOT stop the launcher
+Write-Host "  Seeding database..." -ForegroundColor DarkGray
+& $pyCmd seed.py 2>&1 | Out-Null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "  [OK] Database seeded." -ForegroundColor Green
+} else {
+    Write-Host "  [WARN] Seed skipped or already up-to-date (non-fatal)." -ForegroundColor DarkYellow
+}
+
 Set-Location $root
 
-# Frontend
-if (-not (Test-Path "$root\frontend-react\node_modules")) {
-    Write-Host "  Installing React dependencies (first time)..." -ForegroundColor DarkYellow
-    Set-Location "$root\frontend-react"
+# Install frontend dependencies (first run only)
+$frontendPath = "$root\frontend-react"
+if (-not (Test-Path "$frontendPath\node_modules")) {
+    Write-Host "  Installing React dependencies (first time, please wait)..." -ForegroundColor DarkYellow
+    Set-Location $frontendPath
     npm install --silent
     Set-Location $root
 }
 
-Write-Host "  [OK] Environment ready." -ForegroundColor Green
+Write-Host "  [OK] Dependencies ready." -ForegroundColor Green
 
-# Start Servers
+# ── [3/4] Start servers ───────────────────────────────────────
 Write-Host "  [3/4] Launching servers..." -ForegroundColor Yellow
 
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\backend'; & $pyCmd app.py" -WindowStyle Normal
-Start-Sleep -Seconds 2
+# Backend — Flask on port 5000
+$backendCmd = "Set-Location '$root\backend'; $($pyCmd) app.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd -WindowStyle Normal
 
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$root\frontend-react'; npm run dev" -WindowStyle Normal
+Write-Host "  [OK] Backend starting on http://localhost:5000" -ForegroundColor Green
+Start-Sleep -Seconds 3
+
+# Frontend — Vite on port 3000
+$frontendCmd = "Set-Location '$frontendPath'; npm run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $frontendCmd -WindowStyle Normal
+
+Write-Host "  [OK] Frontend starting on http://localhost:3000" -ForegroundColor Green
 Start-Sleep -Seconds 4
 
-Write-Host "  [OK] Servers are starting." -ForegroundColor Green
-
-# Final
-Write-Host "  [4/4] Finishing..." -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  Opening browser: http://localhost:3000" -ForegroundColor Cyan
+# ── [4/4] Open browser ────────────────────────────────────────
+Write-Host "  [4/4] Opening browser..." -ForegroundColor Yellow
 Start-Process "http://localhost:3000"
 
 Write-Host ""
@@ -88,5 +102,10 @@ Write-Host "  ============================================" -ForegroundColor Cya
 Write-Host "   Backend  : http://localhost:5000          " -ForegroundColor White
 Write-Host "   Frontend : http://localhost:3000          " -ForegroundColor White
 Write-Host "  ============================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Test Credentials:" -ForegroundColor DarkGray
+Write-Host "   Admin    : sudeep@gmail.com / 123456789   " -ForegroundColor DarkGray
+Write-Host "   Lecturer : priya@demo.com   / 1234        " -ForegroundColor DarkGray
+Write-Host "   Student  : BCA2024001       / 1234        " -ForegroundColor DarkGray
 Write-Host ""
 Read-Host "  Press Enter to close this launcher"

@@ -157,11 +157,21 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        t = 'pending'
+        if 'Approve' in self.message or 'approve' in self.message:
+            t = 'approved'
+        elif 'Reject' in self.message or 'reject' in self.message:
+            t = 'rejected'
+
         return {
             'id': self.id,
             'user_id': self.user_id,
             'role': self.role,
             'message': self.message,
+            'msg': self.message,
             'is_read': self.is_read,
-            'created_at': self.created_at.isoformat()
+            'read': self.is_read,
+            'created_at': self.created_at.isoformat(),
+            'time': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'type': t
         }

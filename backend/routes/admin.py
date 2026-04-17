@@ -31,6 +31,7 @@ def delete_class(cid):
     err = require_management()
     if err: return err
     c = Class.query.get_or_404(cid)
+    LecturerAssignment.query.filter_by(class_id=cid).delete()
     db.session.delete(c); db.session.commit()
     return jsonify({'message': 'Deleted'}), 200
 

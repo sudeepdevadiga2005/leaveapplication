@@ -8,6 +8,8 @@ __pycache__/
 backend/*.db
 backend/instance/
 backend/.env
+instance/
+*.db
 frontend-react/node_modules/
 frontend-react/dist/
 .env

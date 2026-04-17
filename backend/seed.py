@@ -1,6 +1,11 @@
+import os
+from dotenv import load_dotenv
 from models import Student, Lecturer, Management, Class, Subject, LecturerAssignment, Leave
 from extensions import db
 from werkzeug.security import generate_password_hash
+
+# Load environment variables
+load_dotenv()
 
 def seed_db():
     # Clear all existing data first
@@ -15,7 +20,9 @@ def seed_db():
     db.session.commit()
 
     # ── Management ────────────────────────────────────────────
-    admin = Management(email='admin@demo.com', password=generate_password_hash('admin123'))
+    admin_email = os.getenv('ADMIN_EMAIL', 'admin@demo.com')
+    admin_pass  = os.getenv('ADMIN_PASSWORD', 'admin123')
+    admin = Management(email=admin_email, password=generate_password_hash(admin_pass))
     db.session.add(admin)
 
     # ── Classes (BCom, BBA, BCA — 3 departments) ─────────────
@@ -121,3 +128,9 @@ def seed_db():
     db.session.add_all(leaves)
     db.session.commit()
     print('Database seeded with BCom, BBA, BCA departments.')
+
+if __name__ == '__main__':
+    from app import create_app
+    app = create_app()
+    with app.app_context():
+        seed_db()

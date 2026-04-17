@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../api'
 
@@ -105,6 +105,18 @@ const S = {
     letterSpacing: '.4px',
     boxShadow: `0 4px 12px ${color}40`,
   }),
+  pwWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
+  pwToggle: {
+    position: 'absolute', right: '12px',
+    background: 'none', border: 'none',
+    cursor: 'pointer', color: 'var(--text-3)',
+    fontSize: '.75rem', fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '.5px',
+    zIndex: 10,
+    padding: '4px',
+    transition: 'color .2s',
+  },
 }
 
 export default function Login() {
@@ -115,6 +127,7 @@ export default function Login() {
   const [error, setError]     = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const activeColor = ROLES.find(r => r.key === role)?.color || 'var(--teal)'
@@ -227,8 +240,19 @@ export default function Login() {
               )}
               <div className="form-group">
                 <label className="form-label">Password</label>
-                <input className="form-control" type="password" value={form.password || ''} onChange={e => set('password', e.target.value)}
-                  placeholder="Enter your password" onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+                <div style={S.pwWrap}>
+                  <input className="form-control" 
+                    type={showPassword ? "text" : "password"} 
+                    style={{ paddingRight: '45px', width: '100%' }}
+                    value={form.password || ''} 
+                    onChange={e => set('password', e.target.value)}
+                    placeholder="Enter your password" 
+                    onKeyDown={e => e.key === 'Enter' && handleSubmit()} 
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={S.pwToggle}>
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -297,7 +321,17 @@ export default function Login() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Password <span style={{color:'var(--rejected)'}}>*</span></label>
-                  <input className="form-control" type="password" value={form.password || ''} onChange={e => set('password', e.target.value)} />
+                  <div style={S.pwWrap}>
+                    <input className="form-control" 
+                      type={showPassword ? "text" : "password"} 
+                      style={{ paddingRight: '45px', width: '100%' }}
+                      value={form.password || ''} 
+                      onChange={e => set('password', e.target.value)} 
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={S.pwToggle}>
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
