@@ -7,6 +7,7 @@ from mail_service import mail
 from routes.auth   import auth_bp
 from routes.leaves import leaves_bp
 from routes.admin  import admin_bp
+from routes.notifications import notifs_bp
 
 # Load .env file if it exists
 load_dotenv()
@@ -52,6 +53,7 @@ def create_app():
     app.register_blueprint(auth_bp,   url_prefix='/api')
     app.register_blueprint(leaves_bp, url_prefix='/api/leaves')
     app.register_blueprint(admin_bp,  url_prefix='/api/admin')
+    app.register_blueprint(notifs_bp, url_prefix='/api/notifications')
 
     with app.app_context():
         db_path = os.path.join(app.instance_path, 'absentalert.db')

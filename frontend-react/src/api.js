@@ -48,4 +48,8 @@ export const api = {
   getLecturers:      ()    => req('GET',    '/admin/lecturers'),
   getDashboard:      ()    => req('GET',    '/admin/dashboard'),
   getStudentReport:  ()    => req('GET',    '/leaves/student-report'),
+
+  // Notifications
+  getNotifs:         ()    => req('GET',    '/notifications/'),
+  readAllNotifs:     ()    => req('PATCH',  '/notifications/read-all'),
 }
