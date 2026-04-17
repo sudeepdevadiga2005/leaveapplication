@@ -30,9 +30,13 @@ def apply_leave():
 
     if role == 'student':
         student = Student(db).find_by_id(uid)
-        assignments = LecturerAssignment(db).find_by_class(
-            next((c['id'] for c in Class(db).all() if c['class_name'] == student['class_name']), None)
-        )
+        if not student:
+            return jsonify({'error': 'Student not found'}), 404
+
+        # Find class_id matching student's class_name
+        all_classes = Class(db).all()
+        cls = next((c for c in all_classes if c['class_name'] == student['class_name']), None)
+        assignments = LecturerAssignment(db).find_by_class(cls['id']) if cls else []
 
         leave_id = Leave(db).create({
             'applicant_id':   uid,
