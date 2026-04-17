@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 
 load_dotenv()
@@ -15,10 +13,12 @@ def seed_db():
     for col in ['leaves', 'lecturer_assignments', 'students', 'lecturers', 'subjects', 'classes', 'management', 'notifications']:
         db[col].delete_many({})
 
-    # ── Management ────────────────────────────────────────────
-    admin_email = os.getenv('ADMIN_EMAIL', 'admin@demo.com')
-    admin_pass  = os.getenv('ADMIN_PASSWORD', 'admin123')
-    admin_id = Management(db).create({'email': admin_email, 'password': generate_password_hash(admin_pass), 'role': 'admin'})
+    # ── Management (stored directly in MongoDB) ──────────────
+    admin_id = Management(db).create({
+        'email':    'sudeep@gmail.com',
+        'password': generate_password_hash('123456789'),
+        'role':     'admin'
+    })
 
     # ── Classes ───────────────────────────────────────────────
     class_data = [
