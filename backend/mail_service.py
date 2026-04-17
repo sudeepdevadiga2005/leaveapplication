@@ -1,10 +1,23 @@
+"""
+AbsentAlert — Email Notification Service
+Sends emails on leave events using Flask-Mail + Gmail SMTP.
+"""
+
 from flask_mail import Mail, Message
 from flask import current_app
 
 mail = Mail()
 
 def _send(subject, recipients, body):
-    """Send a single email. Silently logs errors so app never crashes."""
+    """
+    Send email. Checks MAIL_ENABLED flag first.
+    Silently logs errors so the app never crashes if email fails.
+    """
+    # Use MAIL_ENABLED check from remote if present, otherwise default to True for now
+    if not current_app.config.get('MAIL_ENABLED', True):
+        print(f"[MAIL SKIPPED] Email not configured. Would have sent: {subject}")
+        return
+
     try:
         msg = Message(
             subject=subject,
@@ -15,9 +28,9 @@ def _send(subject, recipients, body):
         mail.send(msg)
         print(f"[MAIL] Sent to {recipients}: {subject}")
     except Exception as e:
-        print(f"[MAIL ERROR] {e}")
+        print(f"[MAIL ERROR] Failed to send '{subject}' to {recipients}: {e}")
 
-# 1. Student submits leave → Notify Lecturer
+# 1. Student submits leave -> Notify Lecturer
 def notify_student_leave_submitted_to_lecturer(lecturer_name, lecturer_email, student_name, leave_type, from_date, to_date, reason):
     subject = f"[AbsentAlert] Action Required: New Leave Request from {student_name}"
     body = f"""Dear {lecturer_name},
@@ -37,7 +50,7 @@ Regards,
 AbsentAlert System"""
     _send(subject, lecturer_email, body)
 
-# 2. Lecturer rejects student leave → Notify Student
+# 2. Lecturer rejects student leave -> Notify Student
 def notify_student_leave_rejected_by_lecturer(student_name, student_email, leave_type, from_date, to_date, remarks):
     subject = f"[AbsentAlert] Leave Request Status Update - Rejected"
     body = f"""Dear {student_name},
@@ -55,7 +68,7 @@ Regards,
 AbsentAlert System"""
     _send(subject, student_email, body)
 
-# 3. Lecturer approves and forwards → Notify Student
+# 3. Lecturer approves and forwards -> Notify Student
 def notify_student_leave_approved_by_lecturer(student_name, student_email, leave_type, from_date, to_date):
     subject = f"[AbsentAlert] Leave Request Status Update - Forwarded"
     body = f"""Dear {student_name},
@@ -74,7 +87,7 @@ Regards,
 AbsentAlert System"""
     _send(subject, student_email, body)
 
-# 4. Lecturer approves and forwards → Notify Admin
+# 4. Lecturer approves and forwards -> Notify Admin
 def notify_admin_student_leave_forwarded(admin_email, student_name, leave_type, from_date, to_date):
     subject = f"[AbsentAlert] Action Required: Student Leave Request Forwarded"
     body = f"""Dear Admin,
@@ -93,7 +106,7 @@ Regards,
 AbsentAlert System"""
     _send(subject, admin_email, body)
 
-# 5. Admin final decision for student leave → Notify Student
+# 5. Admin final decision for student leave -> Notify Student
 def notify_student_leave_final_decision(student_name, student_email, leave_type, from_date, to_date, status, remarks):
     subject = f"[AbsentAlert] Final Decision: Your Leave Request has been {status}"
     body = f"""Dear {student_name},
@@ -111,7 +124,7 @@ Regards,
 AbsentAlert System"""
     _send(subject, student_email, body)
 
-# 6. Lecturer submits leave → Notify Admin
+# 6. Lecturer submits leave -> Notify Admin
 def notify_lecturer_leave_submitted_to_admin(admin_email, lecturer_name, leave_type, from_date, to_date, reason):
     subject = f"[AbsentAlert] Action Required: New Lecturer Leave Request from {lecturer_name}"
     body = f"""Dear Admin,
@@ -131,7 +144,7 @@ Regards,
 AbsentAlert System"""
     _send(subject, admin_email, body)
 
-# 7. Admin final decision for lecturer leave → Notify Lecturer
+# 7. Admin final decision for lecturer leave -> Notify Lecturer
 def notify_lecturer_leave_final_decision(lecturer_name, lecturer_email, leave_type, from_date, to_date, status, remarks):
     subject = f"[AbsentAlert] Final Decision: Your Leave Request has been {status}"
     body = f"""Dear {lecturer_name},
@@ -148,3 +161,4 @@ Remarks    : {remarks or 'No remarks provided.'}
 Regards,
 AbsentAlert System"""
     _send(subject, lecturer_email, body)
+

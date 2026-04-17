@@ -32,12 +32,13 @@ def apply_leave():
 
     if role == 'student':
         student = Student.query.get(uid)
-        # Find lecturers assigned to this student's class
+        
+        # Check for mentor logic from remote, but ensure the email is sent
+        # For simplicity and to satisfy the 'Automatic to Lecturer' requirement, we search for all assigned lecturers
         assignments = LecturerAssignment.query.join(Class).filter(
             Class.class_name == student.class_name
         ).all()
         
-        # Student leave ALWAYS goes to Lecturer first according to requirements
         initial_status = 'Pending with Lecturer'
 
         leave = Leave(
@@ -52,7 +53,7 @@ def apply_leave():
         db.session.add(leave)
         db.session.commit()
 
-        # Email all assigned lecturers
+        # Email assigned lecturers
         for a in assignments:
             lec = Lecturer.query.get(a.lecturer_id)
             if lec:
@@ -191,7 +192,6 @@ def approve(lid):
             )
 
     elif role == 'management':
-        # Admin can approve if it's forwarded from lecturer (student) OR directly submitted (lecturer)
         if leave.status not in ('Approved by Lecturer and Forwarded to Admin', 'Pending with Admin'):
             return jsonify({'error': 'Leave not in a state for Admin approval'}), 400
         

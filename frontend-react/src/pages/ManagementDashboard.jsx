@@ -33,7 +33,7 @@ export default function ManagementDashboard() {
   // Forms
   const [newClass, setNewClass] = useState({ class_name: '', department: '', semester: '', section: '' })
   const [newSubject, setNewSubject] = useState({ subject_name: '', subject_code: '', department: '' })
-  const [newAssign, setNewAssign] = useState({ lecturer_id: '', class_id: '', subject_id: '' })
+  const [newAssign, setNewAssign] = useState({ lecturer_id: '', class_id: '', is_mentor: false })
   const [newLecturer, setNewLecturer] = useState({ lecturer_name: '', email: '', password: '', department: '', lecturer_id: '' })
 
   const load = useCallback(async () => {
@@ -66,7 +66,6 @@ export default function ManagementDashboard() {
   const h = new Date().getHours()
   const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
   
-  // Count leaves pending for Admin action
   const pendingCount = adminStudentLeaves.filter(l => l.status === 'Approved by Lecturer and Forwarded to Admin').length + 
                        adminLecturerLeaves.filter(l => l.status === 'Pending with Admin').length
 
@@ -94,10 +93,10 @@ export default function ManagementDashboard() {
   }
 
   const addAssignment = async () => {
-    if (!newAssign.lecturer_id || !newAssign.class_id || !newAssign.subject_id) {
-      showToast('Missing', 'Select lecturer, class and subject', 'warning'); return
+    if (!newAssign.lecturer_id || !newAssign.class_id) {
+      showToast('Missing', 'Select lecturer and class', 'warning'); return
     }
-    try { await api.assignLecturer(newAssign); await load(); setNewAssign({ lecturer_id: '', class_id: '', subject_id: '' }); showToast('Assigned ', 'Lecturer assigned.', 'success') }
+    try { await api.assignLecturer(newAssign); await load(); setNewAssign({ lecturer_id: '', class_id: '', is_mentor: false }); showToast('Assigned ', 'Lecturer assigned.', 'success') }
     catch (e) { showToast('Error', e.message, 'error') }
   }
 
@@ -266,28 +265,28 @@ export default function ManagementDashboard() {
             <div className="topbar"><div className="topbar-left"><h1>Lecturer Assignments</h1><p>Assign lecturers to classes and subjects</p></div></div>
             <div className="card" style={{ marginBottom: '1.5rem' }}>
               <div className="card-title" style={{ marginBottom: '1.25rem' }}><div className="card-icon">—</div>New Assignment</div>
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                 <div className="form-group">
                   <label className="form-label">Lecturer</label>
                   <select className="form-control" value={newAssign.lecturer_id} onChange={e => setNewAssign(a => ({ ...a, lecturer_id: e.target.value }))}>
                     <option value="">Select lecturer…</option>
-                    {lecturers.map(l => <option key={l.id} value={l.id}>{l.lecturer_name}</option>)}
+                    {lecturers.map(l => <option key={l.id} value={l.id}>{l.lecturer_name} ({l.department})</option>)}
                   </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Class</label>
                   <select className="form-control" value={newAssign.class_id} onChange={e => setNewAssign(a => ({ ...a, class_id: e.target.value }))}>
                     <option value="">Select class…</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.class_name}</option>)}
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.class_name} — {c.department}</option>)}
                   </select>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Subject</label>
-                  <select className="form-control" value={newAssign.subject_id} onChange={e => setNewAssign(a => ({ ...a, subject_id: e.target.value }))}>
-                    <option value="">Select subject…</option>
-                    {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_name}</option>)}
-                  </select>
-                </div>
+              </div>
+              <div style={{ padding: '.65rem .875rem', background: '#dbeafe', border: '1px solid #3b82f6', borderRadius: 8, marginBottom: '1rem', fontSize: '.78rem', color: '#1e40af', lineHeight: 1.5 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
+                  <input type="checkbox" checked={newAssign.is_mentor} onChange={e => setNewAssign(a => ({ ...a, is_mentor: e.target.checked }))} />
+                  <span style={{ fontWeight: 600 }}>Set as Class Mentor / In-charge</span>
+                </label>
+                <p style={{ marginTop: '.35rem', fontSize: '.75rem', color: '#475569' }}>Student leave requests will go to the class mentor. Only one mentor per class.</p>
               </div>
               <button className="btn btn-primary" onClick={addAssignment}>Assign Lecturer</button>
             </div>
@@ -295,18 +294,22 @@ export default function ManagementDashboard() {
               <div className="card-title" style={{ marginBottom: '1.25rem' }}><div className="card-icon">—</div>Current Assignments</div>
               <div className="table-wrap">
                 <table>
-                  <thead><tr><th>Lecturer</th><th>Class</th><th>Subject</th><th>Department</th><th>Action</th></tr></thead>
+                  <thead><tr><th>Lecturer</th><th>Class</th><th>Department</th><th>Role</th><th>Action</th></tr></thead>
                   <tbody>
                     {assignments.map(a => (
                       <tr key={a.id}>
                         <td className="td-primary">{a.lecturer_name}</td>
                         <td>{a.class_name}</td>
-                        <td>{a.subject_name}</td>
                         <td className="td-muted">{a.department}</td>
+                        <td>
+                          {a.is_mentor
+                            ? <span className="badge badge-approved">Class Mentor</span>
+                            : <span className="badge badge-info">Lecturer</span>}
+                        </td>
                         <td><button className="btn btn-sm btn-danger" onClick={async () => { await api.deleteAssignment(a.id); await load(); showToast('Deleted', 'Assignment removed.', 'error') }}>Delete</button></td>
                       </tr>
                     ))}
-                    {!assignments.length && <tr><td colSpan={5}><div className="empty-state"><div className="empty-icon"></div><p>No assignments yet</p></div></td></tr>}
+                    {!assignments.length && <tr><td colSpan={5}><div className="empty-state"><p>No assignments yet</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -346,7 +349,6 @@ export default function ManagementDashboard() {
                       <button className="btn btn-sm btn-danger" onClick={async () => { await api.deleteClass(c.id); await load() }}>✕</button>
                     </div>
                   ))}
-                  {!classes.length && <div className="empty-state"><p>No classes yet</p></div>}
                 </div>
               </div>
               <div>
@@ -376,7 +378,6 @@ export default function ManagementDashboard() {
                       <button className="btn btn-sm btn-danger" onClick={async () => { await api.deleteSubject(s.id); await load() }}>✕</button>
                     </div>
                   ))}
-                  {!subjects.length && <div className="empty-state"><p>No subjects yet</p></div>}
                 </div>
               </div>
             </div>
@@ -402,7 +403,6 @@ export default function ManagementDashboard() {
                         <td>{s.semester || '—'}</td>
                       </tr>
                     ))}
-                    {!students.length && <tr><td colSpan={6}><div className="empty-state"><div className="empty-icon">AA</div><p>No students registered</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -479,11 +479,10 @@ export default function ManagementDashboard() {
                           <td className="td-muted">{l.lecturer_id || '—'}</td>
                           <td>{l.email}</td>
                           <td>{l.department}</td>
-                          <td>{asgn.length ? asgn.map(a => `${a.class_name}/${a.subject_name}`).join(', ') : <span className="td-muted">Not assigned</span>}</td>
+                          <td>{asgn.length ? asgn.map(a => `${a.class_name}${a.is_mentor ? ' (Mentor)' : ''}`).join(', ') : <span className="td-muted">Not assigned</span>}</td>
                         </tr>
                       )
                     })}
-                    {!lecturers.length && <tr><td colSpan={5}><div className="empty-state"><p>No lecturers registered</p></div></td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -509,6 +508,7 @@ export default function ManagementDashboard() {
             </div>
           </div>
         )}
+
       </main>
 
       {/* ── ACTION MODAL ── */}
